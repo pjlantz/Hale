@@ -22,7 +22,12 @@ import cmd, sys
 
 class CLI(cmd.Cmd):
     """
-    Handles command line input
+    Handles command line input with support for 
+    command line completion and command history. 
+    Additionally the cmd module provides a nice help feature,
+    the comments for the do_command functions are shown 
+    when issuing help <command>.
+    Note that completion is not supported on Windows
     """
 	
     # default prompt
@@ -37,13 +42,13 @@ class CLI(cmd.Cmd):
         
     def do_quit(self, arg):
         """
-        Exit the program
+        Exit the program gracefully
         """
         sys.exit(0)
         
     def do_exit(self, arg):
         """
-        Exit the program
+        Exit the program gracefully
         """
         sys.exit(0)
 
