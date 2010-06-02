@@ -25,7 +25,7 @@ class CLI(cmd.Cmd):
     Handles command line input
     """
 	
-	# default prompt
+    # default prompt
     prompt = ">> "
     
     def default(self, line):
