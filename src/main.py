@@ -21,10 +21,10 @@
 import cmd, sys
 
 class CLI(cmd.Cmd):
-"""
-Handles command line input
-"""
-
+    """
+    Handles command line input
+    """
+	
 	# default prompt
     prompt = ">> "
     
