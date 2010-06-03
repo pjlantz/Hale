@@ -19,6 +19,9 @@
 ################################################################################
 
 import cmd, sys, os, signal
+import threading, time
+from modules import moduleManager
+
 if os.name == "nt":
     try:
         import pyreadline
@@ -37,12 +40,36 @@ class CLI(cmd.Cmd):
 	
     def __init__(self):
         """
-        Constructor, sets up cmd variables
+        Constructor, sets up cmd variables and other
+        data structures holding modules, configs etc.
+        Starts a thread that looks for new modules
         """
         cmd.Cmd.__init__(self)
         self.prompt = ">> "
         self.intro = "\nType help for a list of commands\n"
         self.undoc_header = "Help commands available:"
+        self.moduleThread = LoadModules()
+        self.moduleThread.start()
+        self.modlist = []
+        self.config = {}
+        
+    def do_exec(self, arg):
+        """
+        Execute a module with the current config. Usage:
+        exec modulename
+        """
+        self.config = {"nick":"Peppe", "channel":"#irc"}
+        if arg == "http":
+            self.config = {"server":"www.pjlantz.com", "buildid":"win32ID12345"}
+        moduleManager.execute(arg, self.config)
+    
+    def do_lsmod(self, arg):
+        """
+        List all modules currently installed
+        """
+        self.modlist = moduleManager.get_modules()
+        for mod in self.modlist:
+            print mod
     
     def default(self, line):
         """
@@ -67,7 +94,39 @@ class CLI(cmd.Cmd):
         """
         Exit the program gracefully
         """
+        self.moduleThread.stop()
+        print "Wait while quitting.."
+        self.moduleThread.join()
         sys.exit(0)
+        
+class LoadModules(threading.Thread):
+    """
+    This thread call the function 'load_modules'
+    in moduleManager periodically to check for 
+    newly registered modules and modules recently
+    removed
+    """
+
+    def __init__(self):
+        """
+        Constructor, sets continue flag
+        """
+        self.cont = True
+        threading.Thread.__init__ (self)
+
+    def run(self):
+        """
+        Handles the call to 'load_modules'
+        """
+        while self.cont:
+            moduleManager.load_modules("modules/modules.list")
+            time.sleep(5)
+            
+    def stop(self):
+        """
+        Mark the continue flag to stop thread
+        """
+        self.cont = False
 
 def set_ctrlc_handler(func):
     """
@@ -89,4 +148,3 @@ if __name__ == "__main__":
     set_ctrlc_handler(on_ctrlc)
     CLI().cmdloop()
             
-
