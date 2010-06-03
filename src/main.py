@@ -18,7 +18,13 @@
 #
 ################################################################################
 
-import cmd, sys
+import cmd, sys, os, signal
+if os.name == "nt":
+    try:
+        import pyreadline
+    except ImportError:
+        print "Error: Windows PyReadline support missing"
+        sys.exit(1)
 
 class CLI(cmd.Cmd):
     """
@@ -26,12 +32,17 @@ class CLI(cmd.Cmd):
     command line completion and command history. 
     Additionally the cmd module provides a nice help feature,
     the comments for the do_command functions are shown 
-    when issuing help <command>.
-    Note that completion is not supported on Windows
+    when issuing help <command>
     """
 	
-    # default prompt
-    prompt = ">> "
+    def __init__(self):
+        """
+        Constructor, sets up cmd variables
+        """
+        cmd.Cmd.__init__(self)
+        self.prompt = ">> "
+        self.intro = "\nType help for a list of commands\n"
+        self.undoc_header = "Help commands available:"
     
     def default(self, line):
         """
@@ -40,11 +51,17 @@ class CLI(cmd.Cmd):
         """
         print "Unkown command: " + line
         
+    def emptyline(self):
+        """
+        Called when empty line was entered
+        """
+        pass
+        
     def do_quit(self, arg):
         """
         Exit the program gracefully
         """
-        sys.exit(0)
+        self.do_exit(arg)
         
     def do_exit(self, arg):
         """
@@ -52,20 +69,22 @@ class CLI(cmd.Cmd):
         """
         sys.exit(0)
 
-if __name__ == "__main__":
-    def start_cmd(banner=""):
-        """
-        Used to prevent CTRL+C signals to interrupt the program.
-        SIGINT does not work on Windows and neither does
-        SetConsoleCtrlHandler from win32api together with the cmd
-        module
-        """
-        try:
-            CLI().cmdloop(banner)
-        except KeyboardInterrupt:
-            print "\r"
-            start_cmd()
+def set_ctrlc_handler(func):
+    """
+    Catch CTRL+C and let the function
+    on_ctrlc take care of it
+    """
+    signal.signal(signal.SIGINT, func)
 
-    start_cmd("\nType help for a list of commands\n")
+if __name__ == "__main__":
+
+    def on_ctrlc(sig, func=None):
+        """
+        Ignore pressed CTRL+C
+        """
+        pass
+
+    set_ctrlc_handler(on_ctrlc)
+    CLI().cmdloop()
             
 
