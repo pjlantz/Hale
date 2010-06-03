@@ -77,9 +77,9 @@ def set_ctrlc_handler(func):
     signal.signal(signal.SIGINT, func)
 
 if __name__ == "__main__":
-	"""
-	Main program starts
-	"""
+    """
+    Main program starts
+    """
     def on_ctrlc(sig, func=None):
         """
         Ignore pressed CTRL+C
