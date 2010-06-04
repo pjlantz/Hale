@@ -55,8 +55,8 @@ class CLI(cmd.Cmd):
         
     def do_exec(self, arg):
         """
-        Execute a module with the current config. Usage:
-        exec modulename
+        Execute a module with the current config. 
+        Usage: exec modulename
         """
         self.config = {"nick":"Peppe", "channel":"#irc"}
         if arg == "http":
