@@ -95,7 +95,6 @@ class CLI(cmd.Cmd):
         Exit the program gracefully
         """
         self.moduleThread.stop()
-        print "Wait while quitting.."
         self.moduleThread.join()
         sys.exit(0)
         
@@ -120,7 +119,7 @@ class LoadModules(threading.Thread):
         """
         while self.cont:
             moduleManager.load_modules("modules/modules.list")
-            time.sleep(5)
+            time.sleep(1)
             
     def stop(self):
         """

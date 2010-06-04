@@ -49,7 +49,8 @@ def execute(module, config):
  
 def load_modules(file):
     """ 
-    Unload/Load modules from a file
+    Load/Unload modules from a file. Will be changed to look for module changes
+    in a database instead
     """
     tmpList = [] # temporary store all modules to check later for removed ones
     with open(file, "r") as fh:
