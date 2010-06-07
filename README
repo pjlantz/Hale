@@ -5,9 +5,14 @@ Howto add modules, the API work as follow:
 # ircModule.py - example module
 import moduleManager
         
-def start():
-    print "Running irc bot"
+class IRC(object):
 
+   def __init__(self):
+       pass
+       
+   def start(self):
+       print "Starting irc bot"
+       
 @moduleManager.register("irc")
 def handle_config(config):
     """
@@ -16,7 +21,7 @@ def handle_config(config):
     """
     print "Nick: %s" % config["nick"]
     print "Channel: %s" % config["channel"]
-    start()
+    IRC().start()
 
 Add decorator for the function which will be called with the
 configuration as parameter
