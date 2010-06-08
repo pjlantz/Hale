@@ -57,7 +57,8 @@ def load_modules(file):
         for line in fh:
             line = line.strip()
             tmpList.append(line)
-            if line.startswith("#") or line == "":
+            modName = line.split("Module")[0]
+            if line.startswith("#") or line == "" or modName in modules:
                 continue
             try:
                 module = __import__(line,  globals(), locals(), [], -1)
