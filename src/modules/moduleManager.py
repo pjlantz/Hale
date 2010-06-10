@@ -148,7 +148,7 @@ def check_module(file):
         foundError = True
     else:   
         if regName in modules:
-            errorMsg = "\n[ModuleManager]: Register name " + regName + " already in use, add unique for " + file.split(".py")[0]
+            errorMsg = "\n[ModuleManager]: Register name " + regName + " in use for " + file.split(".py")[0]
             foundError = True
         if regName + "Module.py" != file:
             errorMsg += "\n[ModuleManager]: Please follow the name convention for " + file.split(".py")[0]
