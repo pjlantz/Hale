@@ -44,10 +44,12 @@ class CLI(cmd.Cmd):
         data structures holding modules, configs etc.
         Starts a thread that looks for new modules
         """
+        
         cmd.Cmd.__init__(self)
         self.prompt = ">> "
         self.intro = "\nType help for a list of commands\n"
         self.undoc_header = "Help commands available:"
+        moduleManager.handle_modules_onstart()
         self.moduleThread = LoadModules()
         self.moduleThread.start()
         self.modlist = []
@@ -58,6 +60,8 @@ class CLI(cmd.Cmd):
         Execute a module with the current config. 
         Usage: exec modulename
         """
+        
+        # Temporary configs to test modules
         self.config = {"nick":"Peppe", "channel":"#irc"}
         if arg == "http":
             self.config = {"server":"www.pjlantz.com", "buildid":"win32ID12345"}
@@ -67,6 +71,7 @@ class CLI(cmd.Cmd):
         """
         List all modules currently installed
         """
+        
         self.modlist = moduleManager.get_modules()
         for mod in self.modlist:
             print mod
@@ -76,24 +81,28 @@ class CLI(cmd.Cmd):
         Called when command input is not recognized
         and outputs an error message
         """
+        
         print "Unkown command: " + line
         
     def emptyline(self):
         """
         Called when empty line was entered at the prompt
         """
+        
         pass
         
     def do_quit(self, arg):
         """
         Exit the program gracefully
         """
+        
         self.do_exit(arg)
         
     def do_exit(self, arg):
         """
         Exit the program gracefully
         """
+        
         self.moduleThread.stop()
         self.moduleThread.join()
         sys.exit(0)
@@ -110,34 +119,39 @@ class LoadModules(threading.Thread):
         """
         Constructor, sets continue flag
         """
-        self.cont = True
+        
+        self.continueThis = True
         threading.Thread.__init__ (self)
 
     def run(self):
         """
         Handles the call to 'load_modules'
         """
-        while self.cont:
-            moduleManager.load_modules("modules/modules.list")
+        
+        while self.continueThis:
+            moduleManager.load_modules()
             time.sleep(1)
             
     def stop(self):
         """
         Mark the continue flag to stop thread
         """
-        self.cont = False
+        
+        self.continueThis = False
 
 def set_ctrlc_handler(func):
     """
     Catch CTRL+C and let the function
     on_ctrlc take care of it
     """
+    
     signal.signal(signal.SIGINT, func)
 
 if __name__ == "__main__":
     """
     Main program starts
     """
+    
     def on_ctrlc(sig, func=None):
         """
         Ignore pressed CTRL+C

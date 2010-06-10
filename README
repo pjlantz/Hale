@@ -1,31 +1,51 @@
-Howto add modules, the API work as follow:
+Howto add modules, the current module API work as follow:
 
 1) Implement module, for example:
 
 # ircModule.py - example module
 import moduleManager
         
-class IRC(object):
+class IRC(threading.Thread):
 
-   def __init__(self):
-       pass
+   def __init__(self, config):
+       self.config = config
        
-   def start(self):
+   def run(self):
        print "Starting irc bot"
+       ...
+       while (True):
+       # Do some stuff
        
 @moduleManager.register("irc")
 def handle_config(config):
     """
-    Handle configurations, then simply start
-    the bot thread with this config.
+    Function to register modules, simply 
+    implement this to pass along the config
+    and starting the module thread
     """
-    print "Nick: %s" % config["nick"]
-    print "Channel: %s" % config["channel"]
-    IRC().start()
+    
+    IRC(config).start()
 
-Add decorator for the function which will be called with the
-configuration as parameter
+Add decorator for the register function which will be called with 
+the configuration as parameter. This function can be named anything.
+Pass along the configurations you are going to use from the 
+dictionary 'config', the configHandler catches KeyErrors so if wrong 
+configurations are sent to this function, configHandler will notify 
+you about it.
 
-2) Add ircModule or more generally nameModule to the modules.list
-This will be changed where the module information will be stored
-in a database instead.
+Also follow the naming convention
+nameModule.py and @moduleManager.register("name") and import
+the moduleManager, if not the moduleManager will notify 
+you about any errors.
+
+2) Add the file to the modules directory. The moduleManager will
+then automatically import it and check for errors.
+
+3) In modules.conf, edit the configuration, in this case:
+
+# name a section, can be anything as long as its unique
+[myIrcConf]
+nick = SpyBot
+channel = #irc
+...
+etc.
