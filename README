@@ -21,13 +21,13 @@ def handle_config(config):
     """
     Function to register modules, simply 
     implement this to pass along the config
-    and starting the module thread
+    and start the module thread
     """
     
     IRC(config).start()
 
 Add decorator for the register function which will be called with 
-the configuration as parameter. This function can be named anything.
+the configuration as argument. This function can be named anything.
 Pass along the configurations you are going to use from the 
 dictionary 'config', the configHandler catches KeyErrors so if wrong 
 configurations are sent to this function, configHandler will notify 
