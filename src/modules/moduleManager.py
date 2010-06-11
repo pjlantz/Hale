@@ -46,11 +46,12 @@ def register(module):
         return func
     return registered_module
  
-def execute(module, config):
+def execute(module):
     """ 
     Call this function to execute a module with the configurations 'config'
     """
     
+    print module
     if module not in modules:
         print "[ModuleManager]: No such module " + module
         return

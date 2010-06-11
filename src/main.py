@@ -20,6 +20,7 @@
 
 import cmd, sys, os, signal
 import threading, time
+from configHandler import ConfigHandler
 from modules import moduleManager
 
 if os.name == "nt":
@@ -48,12 +49,11 @@ class CLI(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.prompt = ">> "
         self.intro = "\nType help for a list of commands\n"
-        self.undoc_header = "Help commands available:"
         moduleManager.handle_modules_onstart()
         self.moduleThread = LoadModules()
         self.moduleThread.start()
+        self.config = ConfigHandler()
         self.modlist = []
-        self.config = {}
         
     def do_exec(self, arg):
         """
@@ -61,11 +61,7 @@ class CLI(cmd.Cmd):
         Usage: exec modulename
         """
         
-        # Temporary configs to test modules
-        self.config = {"nick":"Peppe", "channel":"#irc"}
-        if arg == "http":
-            self.config = {"server":"www.pjlantz.com", "buildid":"win32ID12345"}
-        moduleManager.execute(arg, self.config)
+        moduleManager.execute(arg)
     
     def do_lsmod(self, arg):
         """
@@ -83,6 +79,22 @@ class CLI(cmd.Cmd):
         
         for mod in moduleManager.get_running():
             print mod
+            
+    def do_lsconf(self, arg):
+        """
+        List all configurations
+        """
+        
+        self.config.listConf()
+        
+    def do_useconf(self, arg):
+        """
+        Sets the current config to use, if argument
+        is empty, current config used is printed out
+        """
+        
+        self.config.useConf(arg)
+        
     
     def default(self, line):
         """
