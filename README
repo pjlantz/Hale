@@ -9,6 +9,7 @@ class IRC(threading.Thread):
 
    def __init__(self, config):
        self.config = config
+       threading.Thread.__init__ (self)
        
    def run(self):
        print "Starting irc bot"

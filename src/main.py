@@ -75,6 +75,14 @@ class CLI(cmd.Cmd):
         self.modlist = moduleManager.get_modules()
         for mod in self.modlist:
             print mod
+            
+    def do_lsexec(self, arg):
+        """
+        List all modules being executed at the moment
+        """
+        
+        for mod in moduleManager.get_running():
+            print mod
     
     def default(self, line):
         """

@@ -28,6 +28,8 @@ files = []
 imports = {}
 # modules with errors
 errors = {}
+# list of executing modules
+moduleExe = []
 
 moduleDir = os.getcwd() + "/modules/"
 if os.name == "nt":
@@ -55,8 +57,10 @@ def execute(module, config):
     func = modules[module]
     try:
         func(config)
-    except KeyError:
-        print "[ModuleManager]: Wrong configuration file for module " + module
+        moduleExe.append(module)
+    except Exception:
+        print "[ModuleManager]:", sys.exc_info()[1]
+        #print "[ModuleManager]: Wrong configuration file for module " + module
         
 def handle_modules_onstart():
     """
@@ -94,8 +98,9 @@ def load_modules():
                 try:
                     module = __import__(file.split(".py")[0],  globals(), locals(), [], -1)
                     imports[modName] = module # store modules for reload later
-                except ImportError:
-                    pass
+                except Exception:
+                    print "[ModuleManager]: In " + file.split(".py")[0], sys.exc_info()[1]
+                    errors[file] = ""
             files.append(file)
     
     # check for removed modules
@@ -132,12 +137,13 @@ def check_module(file):
                 commentCount += 1
             if "import moduleManager" in line:
                 foundImport = True
-                if "#" in line or comment:
+                if comment or line.count("#", 0, line.find("import")) != 0:
                     importError = True
                     break
-            if "@moduleManager.register" in line and "#" not in line and not comment:
-                regName = line.split('"')[1]
-                break
+            if "@moduleManager.register" in line and not comment:
+                if line.count("#", 0, line.find("@moduleManager")) == 0:
+                    regName = line.split('"')[1]
+                    break
     
     errorMsg = ""
     if importError or not foundImport: # wrong import of module or none found at all
@@ -174,6 +180,6 @@ def get_modules():
     
 def get_running():
     """
-    Return a list of currently running modules
+    Return a list of modules currently running
     """
-    pass
+    return moduleExe
