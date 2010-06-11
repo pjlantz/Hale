@@ -172,3 +172,8 @@ def get_modules():
     
     return modules.keys()
     
+def get_running():
+    """
+    Return a list of currently running modules
+    """
+    pass

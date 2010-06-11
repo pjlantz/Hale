@@ -14,7 +14,7 @@ class IRC(threading.Thread):
        print "Starting irc bot"
        ...
        while (True):
-       # Do some stuff
+       # Log
        
 @moduleManager.register("irc")
 def handle_config(config):
