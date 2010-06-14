@@ -45,7 +45,9 @@ then automatically import it and check for errors.
 3) In modules.conf, edit the configuration, in this case:
 
 # name a section, can be anything as long as its unique
+# and add module regname as module option
 [myIrcConf]
+module = irc
 nick = SpyBot
 channel = #irc
 ...
