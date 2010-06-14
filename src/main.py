@@ -93,6 +93,14 @@ class CLI(cmd.Cmd):
         
         self.config.listConf()
         
+    def do_reload(self, arg):
+        """
+        Reload a module if changes have been made to it
+        Usage: reload modulename
+        """
+        
+        moduleManager.reload_module(arg)
+        
     def do_useconf(self, arg):
         """
         Sets the current config to use, if argument

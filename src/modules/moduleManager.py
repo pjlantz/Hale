@@ -116,6 +116,19 @@ def load_modules():
             if modules.has_key(key):
                 modules.pop(key)
                 
+def reload_module(module):
+    """
+    Reload a module
+    """
+    
+    if module not in modules:
+        print "[ModuleManager]: No such module "  + module
+        return
+    
+    files.remove(module + "Module.py")
+    modules.pop(module)
+    
+                
 def check_module(file):
     """
     Check if module is correct, i.e register name
