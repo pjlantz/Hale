@@ -19,6 +19,7 @@
 ################################################################################
 
 import os, sys
+from conf import configHandler
 
 # maps module names with registered functions
 modules = {}
@@ -51,17 +52,18 @@ def execute(module):
     Call this function to execute a module with the configurations 'config'
     """
     
-    print module
     if module not in modules:
         print "[ModuleManager]: No such module " + module
         return
     func = modules[module]
     try:
-        func(config)
-        moduleExe.append(module)
+        if configHandler.ConfigHandler().correctConfig(module):
+            func(configHandler.ConfigHandler().getConfig())
+            moduleExe.append(module)
+        else:
+            return
     except Exception:
         print "[ModuleManager]:", sys.exc_info()[1]
-        #print "[ModuleManager]: Wrong configuration file for module " + module
         
 def handle_modules_onstart():
     """
@@ -183,4 +185,5 @@ def get_running():
     """
     Return a list of modules currently running
     """
+    
     return moduleExe

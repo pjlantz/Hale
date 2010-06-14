@@ -20,7 +20,7 @@
 
 import cmd, sys, os, signal
 import threading, time
-from configHandler import ConfigHandler
+from conf import configHandler
 from modules import moduleManager
 
 if os.name == "nt":
@@ -48,11 +48,11 @@ class CLI(cmd.Cmd):
         
         cmd.Cmd.__init__(self)
         self.prompt = ">> "
-        self.intro = "\nType help for a list of commands\n"
+        self.intro = "\nType help or '?' for a list of commands\n"
         moduleManager.handle_modules_onstart()
         self.moduleThread = LoadModules()
         self.moduleThread.start()
-        self.config = ConfigHandler()
+        self.config = configHandler.ConfigHandler()
         self.modlist = []
         
     def do_exec(self, arg):
@@ -68,16 +68,22 @@ class CLI(cmd.Cmd):
         List all modules currently installed
         """
         
+        lsStr = "\nInstalled modules\n=================\n"
         self.modlist = moduleManager.get_modules()
         for mod in self.modlist:
-            print mod
+            lsStr += mod + "\n"
+        print lsStr
             
     def do_lsexec(self, arg):
         """
         List all modules being executed at the moment
         """
         
-        for mod in moduleManager.get_running():
+        execMods = moduleManager.get_running()
+        if len(execMods) == 0:
+            print "No modules executing"
+            return
+        for mod in execMods:
             print mod
             
     def do_lsconf(self, arg):
