@@ -4,35 +4,42 @@ Howto add modules, the current module API work as follow:
 
 # ircModule.py - example module
 import moduleManager
+from utils import threadManager
         
 class IRC(threading.Thread):
 
    def __init__(self, config):
        self.config = config
+       self.continueThread = True
        threading.Thread.__init__ (self)
+       
+   def doStop(self):
+       self.continueThread = False
        
    def run(self):
        print "Starting irc bot"
        ...
-       while (True):
-       # Log etc
+       while (self.continueThread):
+           # Log etc
        
 @moduleManager.register("irc")
-def handle_config(config):
+def handle_config(config, identifier):
     """
     Function to register modules, simply 
     implement this to pass along the config
     and start the module thread
     """
     
-    IRC(config).start()
+    irc = IRC(config)
+    threadManager.ThreadManager().add(irc, identifier)
 
 Add decorator for the register function which will be called with 
 the configuration as argument. This function can be named anything.
 Pass along the configurations you are going to use from the 
 dictionary 'config', the configHandler catches KeyErrors so if wrong 
 configurations are sent to this function, configHandler will notify 
-you about it.
+you about it. Add the thread object and the identifier to a thread 
+manager which handles thread execution and termination. 
 
 Also follow the naming convention
 nameModule.py and @moduleManager.register("name") and import
