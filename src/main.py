@@ -22,6 +22,7 @@ import cmd, sys, os, signal
 import threading, time
 from conf import configHandler
 from modules import moduleManager
+from utils import threadManager
 
 if os.name == "nt":
     try:
@@ -50,6 +51,7 @@ class CLI(cmd.Cmd):
         self.prompt = ">> "
         self.intro = "\nType help or '?' for a list of commands\n"
         moduleManager.handle_modules_onstart()
+        threadManager.ThreadManager()
         self.moduleThread = LoadModules()
         self.moduleThread.start()
         self.config = configHandler.ConfigHandler()
@@ -58,10 +60,23 @@ class CLI(cmd.Cmd):
     def do_exec(self, arg):
         """
         Execute a module with the current config. 
-        Usage: exec modulename
+        Usage: exec modulename identifier
         """
         
-        moduleManager.execute(arg)
+        args = arg.split(' ')
+        print args
+        if len(args) < 2:
+            print "Usage: exec modulename identifier"
+            return
+        moduleManager.execute(args[0], args[1])
+        
+    def do_stop(self, arg):
+        """
+        Stops a module identified by id
+        Usage: stop id
+        """
+        
+        threadManager.ThreadManager().stop(arg)
     
     def do_lsmod(self, arg):
         """
@@ -79,12 +94,7 @@ class CLI(cmd.Cmd):
         List all modules being executed at the moment
         """
         
-        execMods = moduleManager.get_running()
-        if len(execMods) == 0:
-            print "No modules executing"
-            return
-        for mod in execMods:
-            print mod
+        threadManager.ThreadManager().listAll()
             
     def do_lsconf(self, arg):
         """
@@ -139,6 +149,7 @@ class CLI(cmd.Cmd):
         
         self.moduleThread.stop()
         self.moduleThread.join()
+        threadManager.ThreadManager().stopAll()
         sys.exit(0)
         
 class LoadModules(threading.Thread):

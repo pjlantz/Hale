@@ -20,6 +20,7 @@
 
 import os, sys
 from conf import configHandler
+from utils import threadManager
 
 # maps module names with registered functions
 modules = {}
@@ -29,8 +30,6 @@ files = []
 imports = {}
 # modules with errors
 errors = {}
-# list of executing modules
-moduleExe = []
 
 moduleDir = os.getcwd() + "/modules/"
 if os.name == "nt":
@@ -47,7 +46,7 @@ def register(module):
         return func
     return registered_module
  
-def execute(module):
+def execute(module, identifier):
     """ 
     Call this function to execute a module with the configurations 'config'
     """
@@ -58,8 +57,7 @@ def execute(module):
     func = modules[module]
     try:
         if configHandler.ConfigHandler().correctConfig(module):
-            func(configHandler.ConfigHandler().getConfig())
-            moduleExe.append(module)
+            func(configHandler.ConfigHandler().getConfig(), identifier)
         else:
             return
     except Exception:
@@ -148,14 +146,13 @@ def check_module(file):
     commentCount = 1
     with open(moduleDir + file, "r") as fh:
         for line in fh:
-            if '"""' in line:
+            if line.count('"""') == 1:
                 comment = commentCount % 2
                 commentCount += 1
             if "import moduleManager" in line:
                 foundImport = True
                 if comment or line.count("#", 0, line.find("import")) != 0:
                     importError = True
-                    break
             if "@moduleManager.register" in line and not comment:
                 if line.count("#", 0, line.find("@moduleManager")) == 0:
                     regName = line.split('"')[1]
@@ -194,9 +191,3 @@ def get_modules():
     
     return modules.keys()
     
-def get_running():
-    """
-    Return a list of modules currently running
-    """
-    
-    return moduleExe
