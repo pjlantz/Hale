@@ -64,7 +64,6 @@ class CLI(cmd.Cmd):
         """
         
         args = arg.split(' ')
-        print args
         if len(args) < 2:
             print "Usage: exec modulename identifier"
             return
@@ -94,7 +93,14 @@ class CLI(cmd.Cmd):
         List all modules being executed at the moment
         """
         
-        threadManager.ThreadManager().listAll()
+        idlist = threadManager.ThreadManager().getAll()
+        if len(idlist) == 0:
+            print "No modules running"
+        else:
+            listStr = "\nThread Id\n=========\n"
+            for ident in idlist:
+                listStr += ident + "\n"
+            print listStr
             
     def do_lsconf(self, arg):
         """

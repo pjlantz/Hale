@@ -62,7 +62,7 @@ class ThreadManager(object):
         """
         
         if threadId in self.threads:
-            print "Id already used, choose another"
+            print "[ThreadManager]: Id already used, choose another"
             return
         
         self.threads[threadId] = moduleThread
@@ -73,27 +73,26 @@ class ThreadManager(object):
         Stop a thread with id threadId
         """
         
+        if threadId not in self.threads.keys():
+            print "No such id running"
+            return
         self.threads[threadId].doStop()
         self.threads[threadId].join()
         self.threads.pop(threadId)
         
-    def listAll(self):
+    def getAll(self):
         """
         Outputs all modules currently executed and their id
         """
         
-        listStr = "\nId\n====\n"
-        for ident, obj in self.threads.items():
-            listStr += ident + "\n"
-            
-        print listStr
+        return self.threads.keys()
         
     def stopAll(self):
         """
         Stop all threads, used on program termination
         """
         
-        for ident, obj in self.threads.items():
+        for ident in self.threads.keys():
             self.threads[ident].doStop()
             self.threads[ident].join()
             
