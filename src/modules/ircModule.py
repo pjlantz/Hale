@@ -20,7 +20,7 @@
 
 import moduleManager
 import threading
-#import socket
+import socket
 from utils import *
 
 @moduleManager.register("irc")
