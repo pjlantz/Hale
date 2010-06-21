@@ -20,8 +20,7 @@
 
 import moduleManager
 import threading
-import socket
-
+#import socket
 from utils import *
 
 @moduleManager.register("irc")
@@ -29,7 +28,7 @@ def handle_config(config, identifier):
     """
     Function to register modules, simply
     implement this to pass along the config
-    and start the module thread
+    and the module object to the threadManager
     """
 
     irc = IRC(config)
@@ -48,7 +47,8 @@ class IRC(threading.Thread):
        
         self.continueThread = True
         self.config = config
-        self.currentTopicInfo = ""
+        self.doJoin = False
+        self.firstPing = True
         threading.Thread.__init__ (self)
    
     def __doConnect(self):
@@ -64,16 +64,22 @@ class IRC(threading.Thread):
             self.irc.send(self.config['pass_grammar'] + ' ' + self.config['password'] + '\r\n')
 
         self.irc.send(self.config['nick_grammar'] + ' ' + self.config['nick'] + '\r\n')
-            
         self.irc.send(self.config['user_grammar'] + ' ' + self.config['username'] + ' ' + 
         self.config['username'] + ' ' + self.config['username'] + ' :' + 
         self.config['realname'] + '\r\n')
-
+            
+    def __doJoin(self):
+        """
+        Join channel specified in the configuration
+        """
+        
         if self.config['channel_pass'] != 'None':
             self.irc.send(self.config['join_grammar'] + ' ' + self.config['channel'] + ' ' + 
             self.config['channel_pass'] + '\r\n')
         else:
             self.irc.send(self.config['join_grammar'] + ' ' + self.config['channel'] + '\r\n')
+            
+        self.doJoin = False      
             
     def doStop(self):
         """
@@ -91,20 +97,35 @@ class IRC(threading.Thread):
         self.__doConnect()
         while (self.continueThread):
             self.__handleProtocol()
+        self.irc.close()
                    
     def __handleProtocol(self):
         """
         Handle incoming irc protocol and responses
         """
         
+        if self.doJoin: # after registration
+            self.__doJoin()
+        
         data = self.irc.recv(1024)
-        contents = data.split(" ")
+      
         if data.find(self.config['ping_grammar']) != -1: # Ping
             self.irc.send(self.config['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # Pong
+            if self.firstPing:
+                self.doJoin = True # registered and ready to join
+                self.firstPing = False
+            return
         if data.find(self.config['topic_grammar']) != -1: # Topic
-            urlHandler.URLHandler(self.config, data).start()
+            # Log topic info
+            pass
         if data.find(self.config['currenttopic_grammar']) != -1: # Current topic
-            urlHandler.URLHandler(self.config, data).start()
-            #self.currentTopicInfo = data
-            # data.split('\r\n')[0] - currenttopic, data.split('\r\n')[1] topicinfo
-            # data.split('\r\n')[2...n-1] where n is the last entry shows usernames
+            # Log current topic info
+            pass
+        if data.find(self.config['privmsg_grammar']) != -1: # privmsg
+            # Log privmsg
+            pass
+        if data.find(self.config['notice_grammar']) != -1: # notice
+            # Log notice
+            pass
+                        
+        urlHandler.URLHandler(self.config, data).start()

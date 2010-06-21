@@ -18,15 +18,13 @@
 #
 ################################################################################
 
-import threading
+import threading, sys
 import re, urllib, hashlib, os
 
 class URLHandler(threading.Thread):
     """
     Util class to check for urls and download possible 
-    malwares through http proxies to hide the location. Works
-    with url shortener services but then only file is only 
-    saved with the md5 hash without filename specified.
+    malwares through http proxies to hide the location
     """
 
     def __init__(self, config, data):
@@ -53,12 +51,14 @@ class URLHandler(threading.Thread):
                 extfilename = url[fileposition + 1:]
                 pos = url.rfind('.')
                 extension = url[pos:].split('.')[1]
-                self.__doDownload(url, extfilename)
+                if extension in self.extensions:
+                    self.__doDownload(url, extfilename)
         
     def __doDownload(self, url, extfilename):
         """
         Download possible malware
         """
+        
         proxies = {'http': 'http://174.142.104.57:3128'} # fetch from a list later
         opener = urllib.FancyURLopener(proxies)
         fp = opener.open(url)
@@ -81,5 +81,6 @@ class URLHandler(threading.Thread):
         """
         Strip whitespaces from elements in a list
         """
+        
         return([x.strip() for x in l])
 
