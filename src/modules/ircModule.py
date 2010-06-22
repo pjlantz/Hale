@@ -21,6 +21,7 @@
 import moduleManager
 import threading
 import socket
+import sys
 from utils import *
 
 @moduleManager.register("irc")
@@ -57,7 +58,7 @@ class IRC(threading.Thread):
         """
 
         self.irc = socks.socksocket()
-        self.irc.setproxy(socks.PROXY_TYPE_SOCKS5, 'pjlantz.com', 1020)
+        self.irc.setproxy(socks.PROXY_TYPE_SOCKS5, 'pjlantz.com', 1020) # fetch from master node or db later
         
         self.irc.connect((self.config['network'], int(self.config['port'])))
         if self.config['password'] != 'None':
@@ -86,18 +87,24 @@ class IRC(threading.Thread):
         Stop this thread
         """
        
-        self.continueThread = False
-        self.irc.shutdown(socket.SHUT_RDWR)
-       
+        try:
+            self.continueThread = False
+            self.irc.shutdown(socket.SHUT_RDWR)
+        except Exception:
+            threadManager.ThreadManager().putError(sys.exc_info()[1])
+                   
     def run(self):
         """
         Make connection and define thread loop
         """
        
-        self.__doConnect()
-        while (self.continueThread):
-            self.__handleProtocol()
-        self.irc.close()
+        try:
+            self.__doConnect()
+            while (self.continueThread):
+                self.__handleProtocol()
+            self.irc.close()
+        except Exception:
+            threadManager.ThreadManager().putError(sys.exc_info()[1])
                    
     def __handleProtocol(self):
         """
@@ -108,7 +115,7 @@ class IRC(threading.Thread):
             self.__doJoin()
         
         data = self.irc.recv(1024)
-      
+
         if data.find(self.config['ping_grammar']) != -1: # Ping
             self.irc.send(self.config['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # Pong
             if self.firstPing:
@@ -127,5 +134,5 @@ class IRC(threading.Thread):
         if data.find(self.config['notice_grammar']) != -1: # notice
             # Log notice
             pass
-                        
+                  
         urlHandler.URLHandler(self.config, data).start()

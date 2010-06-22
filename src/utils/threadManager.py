@@ -18,6 +18,8 @@
 #
 ################################################################################
 
+import Queue
+
 class Singleton(type):
     """
     Singleton pattern used to only create one 
@@ -55,6 +57,7 @@ class ThreadManager(object):
         """
        
         self.threads = {}
+        self.bucket = Queue.Queue()
         
     def add(self, moduleThread, threadId):
         """
@@ -67,6 +70,26 @@ class ThreadManager(object):
         
         self.threads[threadId] = moduleThread
         moduleThread.start()
+    
+    def putError(self, exception):
+        """
+        Stores an exception into the bucket
+        """
+        
+        self.bucket.put(exception)
+        
+    def getError(self):
+        """
+        Get error from the exception bucket. This bucket
+        stores all exceptions from the different threads.
+        """
+        
+        try:
+            exc = self.bucket.get(block=False)
+        except Queue.Empty:
+            pass
+        else:
+            print "[ThreadManager]: ", exc            
         
     def stop(self, threadId):
         """

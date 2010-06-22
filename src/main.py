@@ -52,8 +52,8 @@ class CLI(cmd.Cmd):
         self.intro = "\nType help or '?' for a list of commands\n"
         moduleManager.handle_modules_onstart()
         threadManager.ThreadManager()
-        self.moduleThread = LoadModules()
-        self.moduleThread.start()
+        self.managerThread = ManagerThread()
+        self.managerThread.start()
         self.config = configHandler.ConfigHandler()
         self.modlist = []
         
@@ -153,12 +153,12 @@ class CLI(cmd.Cmd):
         Exit the program gracefully
         """
         
-        self.moduleThread.stop()
-        self.moduleThread.join()
+        self.managerThread.stop()
+        self.managerThread.join()
         threadManager.ThreadManager().stopAll()
         sys.exit(0)
         
-class LoadModules(threading.Thread):
+class ManagerThread(threading.Thread):
     """
     This thread call the function 'load_modules'
     in moduleManager periodically to check for 
@@ -181,6 +181,7 @@ class LoadModules(threading.Thread):
         
         while self.continueThis:
             moduleManager.load_modules()
+            threadManager.ThreadManager().getError()
             time.sleep(1)
             
     def stop(self):

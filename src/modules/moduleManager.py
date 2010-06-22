@@ -102,6 +102,9 @@ def load_modules():
                 except Exception:
                     print "[ModuleManager]: In " + file.split(".py")[0], sys.exc_info()[1]
                     errors[file] = ""
+            except Exception:
+                print "[ModuleManager]:" + file.split(".py")[0], sys.exc_info()[1]
+                errors[file] = ""
             files.append(file)
     
     # check for removed modules
@@ -119,7 +122,11 @@ def reload_module(module):
     Reload a module
     """
     
-    if module not in modules:
+    modfile = module + "Module.py"
+    if modfile in errors:
+        errors.pop(modfile)
+        return
+    elif module not in modules:
         print "[ModuleManager]: No such module "  + module
         return
     

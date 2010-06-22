@@ -20,6 +20,7 @@
 
 import threading, sys
 import re, urllib, hashlib, os
+from utils import threadManager
 
 class URLHandler(threading.Thread):
     """
@@ -30,7 +31,7 @@ class URLHandler(threading.Thread):
     def __init__(self, config, data):
         """
         Constructor, fetch the url regexp and file extension
-        configurations to download
+        to download
         """
         
         self.data = data
@@ -43,16 +44,19 @@ class URLHandler(threading.Thread):
         Check if data contains any url
         """
         
-        match = self.url_expre.findall(self.data)
-        if match:
-            for entry in match:
-                url = entry[0]
-                fileposition = url.rfind('/')
-                extfilename = url[fileposition + 1:]
-                pos = url.rfind('.')
-                extension = url[pos:].split('.')[1]
-                if extension in self.extensions:
-                    self.__doDownload(url, extfilename)
+        try:
+            match = self.url_expre.findall(self.data)
+            if match:
+                for entry in match:
+                    url = entry[0]
+                    fileposition = url.rfind('/')
+                    extfilename = url[fileposition + 1:]
+                    pos = url.rfind('.')
+                    extension = url[pos:].split('.')[1]
+                    if extension in self.extensions:
+                        self.__doDownload(url, extfilename)
+        except Exception:
+            threadManager.ThreadManager().putError(sys.exc_info()[1])
         
     def __doDownload(self, url, extfilename):
         """
@@ -62,6 +66,10 @@ class URLHandler(threading.Thread):
         proxies = {'http': 'http://174.142.104.57:3128'} # fetch from a list later
         opener = urllib.FancyURLopener(proxies)
         fp = opener.open(url)
+        urlinfo = fp.info()
+        if "text/html" in urlinfo['Content-Type']: # no executable
+            fp.close()
+            return
         content = "".join(fp.readlines())
         fp.close()
         try:
@@ -76,7 +84,7 @@ class URLHandler(threading.Thread):
             fp = open(filename, 'a+')
             fp.write(content)
             fp.close()
-            
+        
     def __striplist(self, l):
         """
         Strip whitespaces from elements in a list
