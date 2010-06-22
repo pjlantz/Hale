@@ -5,7 +5,20 @@ Howto add modules, the current module API work as follow:
 # ircModule.py - example module
 import moduleManager
 from utils import threadManager
-        
+import sys
+
+@moduleManager.register("irc")
+def handle_config(config, identifier):
+    """
+    Function to register modules, simply 
+    implement this to pass along the config
+    and start the module object to the thread
+    manager
+    """
+    
+    irc = IRC(config)
+    threadManager.ThreadManager().add(irc, identifier)
+
 class IRC(threading.Thread):
 
    def __init__(self, config):
@@ -17,21 +30,13 @@ class IRC(threading.Thread):
        self.continueThread = False
        
    def run(self):
-       print "Starting irc bot"
+       # setup sockets
        ...
-       while (self.continueThread):
-           # Log etc
-       
-@moduleManager.register("irc")
-def handle_config(config, identifier):
-    """
-    Function to register modules, simply 
-    implement this to pass along the config
-    and start the module thread
-    """
-    
-    irc = IRC(config)
-    threadManager.ThreadManager().add(irc, identifier)
+       try:
+           while (self.continueThread):
+               # Log etc
+       except Exception:
+           threadManager.ThreadManager().putError(sys.exc_info()[1])
 
 Add decorator for the register function which will be called with 
 the configuration as argument. This function can be named anything.
@@ -45,6 +50,10 @@ Also follow the naming convention
 nameModule.py and @moduleManager.register("name") and import
 the moduleManager, if not the moduleManager will notify 
 you about any errors.
+
+Catch all errors as Exception and send them to the thread manager
+error bucket which takes care of all errors from every thread 
+running in the monitor system. 
 
 2) Add the file to the modules directory. The moduleManager will
 then automatically import it and check for errors.
