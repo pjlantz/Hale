@@ -9,9 +9,9 @@ from utils import threadManager
 @moduleManager.register("irc")
 def module_setup(config):
     """
-    Function to register modules, simply 
+    Function to register modules, simply
     implement this to pass along the config
-    and the module object to the thread manager
+    to the module object and return it back
     """
     
     return IRC(config)
