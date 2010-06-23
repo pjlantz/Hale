@@ -19,9 +19,10 @@
 ################################################################################
 
 import moduleManager
-import threading
 import socket
 import sys
+import threading
+
 from utils import *
 
 @moduleManager.register("irc")
