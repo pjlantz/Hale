@@ -46,6 +46,7 @@ class IRC(threading.Thread):
         """
 
         self.continueThread = True
+        self.tm = threadManager.ThreadManager()
         self.config = config
         self.doJoin = False
         self.firstPing = True
@@ -91,7 +92,7 @@ class IRC(threading.Thread):
             self.irc.shutdown(socket.SHUT_RDWR)
             self.irc.close()
         except Exception:
-            threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+            self.tm.putError(sys.exc_info()[1], self)
                    
     def run(self):
         """
@@ -101,13 +102,13 @@ class IRC(threading.Thread):
         try:
             self.__doConnect()
         except Exception:
-            threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+            self.tm.putError(sys.exc_info()[1], self)
             
         while (self.continueThread):
             try:
                 self.__handleProtocol()
             except Exception:
-                threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+                self.tm.putError(sys.exc_info()[1], self)
                    
     def __handleProtocol(self):
         """

@@ -21,6 +21,7 @@ class IRC(threading.Thread):
    def __init__(self, config):
        self.config = config
        self.continueThread = True
+       self.tm = threadManager.ThreadManager()
        threading.Thread.__init__ (self)
        
    def doStop(self):
@@ -30,21 +31,20 @@ class IRC(threading.Thread):
        try:
            # setup sockets
        except Exception:
-           threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+           self.tm.putError(sys.exc_info()[1], self)
        ...
        while (self.continueThread):
            try:
                # Log etc
            except Exception:
-               threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+               self.tm.putError(sys.exc_info()[1], self)
 
 Add decorator for the register function (in this case module_setup)
 which will be called with the current configuration as argument. This 
 function can be named anything. Pass along the configurations to the 
 module object, the configHandler catches KeyErrors so if wrong 
 configurations are sent to this function configHandler will notify 
-you about it. Add the module object and the identifier to a thread 
-manager which handles thread execution and termination. 
+you about it. 
 
 Also follow the naming convention nameModule.py and @moduleManager.register("name") 
 and import the moduleManager, if not the moduleManager will notify 
