@@ -109,7 +109,7 @@ class ThreadManager(object):
                 self.threads.pop(key)
                 return
 
-        # exceptions from non modules, eg. urlHandler 
+        # exceptions from non-modules, eg. urlHandler 
         self.bucket.put(exception) # add more info later
         
     def getError(self):
