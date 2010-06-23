@@ -57,7 +57,8 @@ def execute(module, identifier):
     func = modules[module]
     try:
         if configHandler.ConfigHandler().correctConfig(module):
-            func(configHandler.ConfigHandler().getConfig(), identifier)
+            regmod = func(configHandler.ConfigHandler().getConfig())
+            threadManager.ThreadManager().add(regmod, identifier)
         else:
             return
     except Exception:

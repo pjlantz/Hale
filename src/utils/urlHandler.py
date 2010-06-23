@@ -56,7 +56,8 @@ class URLHandler(threading.Thread):
                     if extension in self.extensions:
                         self.__doDownload(url, extfilename)
         except Exception:
-            threadManager.ThreadManager().putError(sys.exc_info()[1])
+            threadManager.ThreadManager().putError(sys.exc_info()[1], "urlHandler")
+            return
         
     def __doDownload(self, url, extfilename):
         """

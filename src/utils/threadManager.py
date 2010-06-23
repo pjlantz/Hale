@@ -19,6 +19,31 @@
 ################################################################################
 
 import Queue
+from threading import Lock
+
+class synchronized(object):
+    """ 
+    Class enapsulating a lock and a function
+    allowing it to be used as a synchronizing
+    decorator making the wrapped function
+    thread-safe 
+    """
+    
+    def __init__(self, *args):
+        self.lock = Lock()
+        
+    def __call__(self, f):
+        def lockedfunc(*args, **kwargs):
+            try:
+                self.lock.acquire()
+                try:
+                    return f(*args, **kwargs)
+                except Exception, e:
+                    raise
+            finally:
+                self.lock.release()
+
+        return lockedfunc
 
 class Singleton(type):
     """
@@ -71,12 +96,21 @@ class ThreadManager(object):
         self.threads[threadId] = moduleThread
         moduleThread.start()
     
-    def putError(self, exception):
+    @synchronized()
+    def putError(self, exception, thread):
         """
         Stores an exception into the bucket
         """
         
-        self.bucket.put(exception)
+        for key, value in self.threads.items():
+            if value == thread:
+                self.bucket.put(exception) # add more info later
+                thread.doStop()
+                self.threads.pop(key)
+                return
+
+        # exceptions from non modules, eg. urlHandler 
+        self.bucket.put(exception) # add more info later
         
     def getError(self):
         """
@@ -89,7 +123,7 @@ class ThreadManager(object):
         except Queue.Empty:
             pass
         else:
-            print "[ThreadManager]: ", exc            
+            print "[ThreadManager]: ", exc
         
     def stop(self, threadId):
         """

@@ -2,22 +2,19 @@ Howto add modules, the current module API work as follow:
 
 1) Implement module, for example:
 
-# ircModule.py - example module
+import sys
 import moduleManager
 from utils import threadManager
-import sys
 
 @moduleManager.register("irc")
-def handle_config(config, identifier):
+def module_setup(config):
     """
     Function to register modules, simply 
     implement this to pass along the config
-    and start the module object to the thread
-    manager
+    and the module object to the thread manager
     """
     
-    irc = IRC(config)
-    threadManager.ThreadManager().add(irc, identifier)
+    return IRC(config)
 
 class IRC(threading.Thread):
 
@@ -30,38 +27,40 @@ class IRC(threading.Thread):
        self.continueThread = False
        
    def run(self):
-       # setup sockets
-       ...
        try:
-           while (self.continueThread):
-               # Log etc
+           # setup sockets
        except Exception:
-           threadManager.ThreadManager().putError(sys.exc_info()[1])
+           threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+       ...
+       while (self.continueThread):
+           try:
+               # Log etc
+           except Exception:
+               threadManager.ThreadManager().putError(sys.exc_info()[1], self)
 
-Add decorator for the register function which will be called with 
-the configuration as argument. This function can be named anything.
-Pass along the configurations you are going to use from the 
-dictionary 'config', the configHandler catches KeyErrors so if wrong 
-configurations are sent to this function, configHandler will notify 
-you about it. Add the thread object and the identifier to a thread 
+Add decorator for the register function (in this case module_setup)
+which will be called with the current configuration as argument. This 
+function can be named anything. Pass along the configurations to the 
+module object, the configHandler catches KeyErrors so if wrong 
+configurations are sent to this function configHandler will notify 
+you about it. Add the module object and the identifier to a thread 
 manager which handles thread execution and termination. 
 
-Also follow the naming convention
-nameModule.py and @moduleManager.register("name") and import
-the moduleManager, if not the moduleManager will notify 
+Also follow the naming convention nameModule.py and @moduleManager.register("name") 
+and import the moduleManager, if not the moduleManager will notify 
 you about any errors.
 
-Catch all errors as Exception and send them to the thread manager
+Catch all possible exceptions and send them to the thread manager
 error bucket which takes care of all errors from every thread 
 running in the monitor system. 
 
-2) Add the file to the modules directory. The moduleManager will
+2) Drag the file to the modules directory. The moduleManager will
 then automatically import it and check for errors.
 
-3) In modules.conf, edit the configuration, in this case:
+3) In modules.conf edit the configuration, in this case:
 
 # name a section, can be anything as long as its unique
-# and add module regname as module option
+# and add module regname (in this case irc) as module option
 [myIrcConf]
 module = irc
 nick = SpyBot

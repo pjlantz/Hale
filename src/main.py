@@ -44,7 +44,8 @@ class CLI(cmd.Cmd):
         """
         Constructor, sets up cmd variables and other
         data structures holding modules, configs etc.
-        Starts a thread that looks for new modules
+        Starts a manager thread taking care of newly
+        added modules and errors from module threads
         """
         
         cmd.Cmd.__init__(self)
@@ -119,7 +120,7 @@ class CLI(cmd.Cmd):
         
     def do_useconf(self, arg):
         """
-        Sets the current config to use, if argument
+        Set the current config to use, if argument
         is empty, current config used is printed out
         """
         
@@ -163,7 +164,9 @@ class ManagerThread(threading.Thread):
     This thread call the function 'load_modules'
     in moduleManager periodically to check for 
     newly registered modules and modules recently
-    removed
+    removed. The thread also checks the thread 
+    manager exception bucket for errors from the
+    module threads.
     """
 
     def __init__(self):

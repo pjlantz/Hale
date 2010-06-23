@@ -25,15 +25,14 @@ import sys
 from utils import *
 
 @moduleManager.register("irc")
-def handle_config(config, identifier):
+def setup_module(config):
     """
     Function to register modules, simply
     implement this to pass along the config
-    and the module object to the threadManager
+    to the module object and return it back
     """
 
-    irc = IRC(config)
-    threadManager.ThreadManager().add(irc, identifier)
+    return IRC(config)
 
 class IRC(threading.Thread):
     """
@@ -45,7 +44,7 @@ class IRC(threading.Thread):
         """
         Constructor sets up configs etc.
         """
-       
+
         self.continueThread = True
         self.config = config
         self.doJoin = False
@@ -90,21 +89,25 @@ class IRC(threading.Thread):
         try:
             self.continueThread = False
             self.irc.shutdown(socket.SHUT_RDWR)
+            self.irc.close()
         except Exception:
-            threadManager.ThreadManager().putError(sys.exc_info()[1])
+            threadManager.ThreadManager().putError(sys.exc_info()[1], self)
                    
     def run(self):
         """
         Make connection and define thread loop
-        """
-       
+        """ 
+        
         try:
             self.__doConnect()
-            while (self.continueThread):
-                self.__handleProtocol()
-            self.irc.close()
         except Exception:
-            threadManager.ThreadManager().putError(sys.exc_info()[1])
+            threadManager.ThreadManager().putError(sys.exc_info()[1], self)
+            
+        while (self.continueThread):
+            try:
+                self.__handleProtocol()
+            except Exception:
+                threadManager.ThreadManager().putError(sys.exc_info()[1], self)
                    
     def __handleProtocol(self):
         """
