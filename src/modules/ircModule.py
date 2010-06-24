@@ -129,17 +129,26 @@ class IRC(moduleInterface.Module):
                 self.doJoin = True # registered and ready to join
                 self.firstPing = False
             return
-        if data.find(self.config['topic_grammar']) != -1: # Topic
+        elif data.find(self.config['topic_grammar']) != -1: # Topic
             # Log topic info
             pass
-        if data.find(self.config['currenttopic_grammar']) != -1: # Current topic
+        elif data.find(self.config['currenttopic_grammar']) != -1: # Current topic
             # Log current topic info
             pass
-        if data.find(self.config['privmsg_grammar']) != -1: # privmsg
+        elif data.find(self.config['privmsg_grammar']) != -1: # privmsg
             # Log privmsg
             pass
-        if data.find(self.config['notice_grammar']) != -1: # notice
+        elif data.find(self.config['notice_grammar']) != -1: # notice
             # Log notice
             pass
-                  
+        elif data.find(self.config['mode_grammar']) != -1: # mode
+            # Log mode
+            pass
+        elif data.find(self.config['kick_grammar']) != -1: # kick
+            # Log kick
+            pass
+        else:
+            # log unrecognized commands, can also be MOTD and NAMES list
+            pass
+                    
         urlHandler.URLHandler(self.config, data).start()
