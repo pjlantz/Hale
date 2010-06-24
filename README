@@ -2,8 +2,8 @@ Howto add modules, the current module API work as follow:
 
 1) Implement module, for example:
 
-import sys
-import moduleManager
+import moduleManager, threading
+from utils import moduleInterface
 from utils import threadManager
 
 @moduleManager.register("irc")
@@ -16,28 +16,31 @@ def module_setup(config):
     
     return IRC(config)
 
-class IRC(threading.Thread):
+# must inherit from Module class
+class IRC(moduleInterface.Module):
 
    def __init__(self, config):
        self.config = config
        self.continueThread = True
        self.tm = threadManager.ThreadManager()
        threading.Thread.__init__ (self)
-       
+   
+   # must be implemented
    def doStop(self):
        self.continueThread = False
-       
+   
+   # must be implemented
    def run(self):
        try:
            # setup sockets
        except Exception:
-           self.tm.putError(sys.exc_info()[1], self)
+           self.tm.putError("Error connecting", self)
        ...
        while (self.continueThread):
            try:
                # Log etc
            except Exception:
-               self.tm.putError(sys.exc_info()[1], self)
+               self.tm.putError("Error during connection", self)
 
 Add decorator for the register function (in this case module_setup)
 which will be called with the current configuration as argument. This 
