@@ -53,7 +53,7 @@ class IRC(moduleInterface.Module):
         self.config = config
         self.doJoin = False
         self.firstPing = True
-        threading.Thread.__init__ (self)
+        threading.Thread.__init__(self)
    
     def __doConnect(self):
         """
