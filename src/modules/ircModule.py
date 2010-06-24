@@ -18,11 +18,11 @@
 #
 ################################################################################
 
-import moduleManager
 import socket
 import sys
 import threading
 
+import moduleManager
 from utils import *
 
 @moduleManager.register("irc")
@@ -35,7 +35,7 @@ def setup_module(config):
 
     return IRC(config)
 
-class IRC(threading.Thread):
+class IRC(moduleInterface.Module):
     """
     Implementation of a irc client to do irc based
     botnet monitoring
@@ -43,7 +43,9 @@ class IRC(threading.Thread):
 
     def __init__(self, config):
         """
-        Constructor sets up configs etc.
+        Constructor sets up configs, threadManager object
+        and various booleans used for network registration
+        when connecting to a IRC server
         """
 
         self.continueThread = True
@@ -55,7 +57,7 @@ class IRC(threading.Thread):
    
     def __doConnect(self):
         """
-        Setup socket and connect to irc server, then join channel
+        Setup socket and connect to irc server
         """
 
         self.irc = socks.socksocket()

@@ -21,6 +21,7 @@
 import os, sys
 from conf import configHandler
 from utils import threadManager
+from utils import moduleInterface
 
 # maps module names with registered functions
 modules = {}
@@ -58,7 +59,10 @@ def execute(module, identifier):
     try:
         if configHandler.ConfigHandler().correctConfig(module):
             regmod = func(configHandler.ConfigHandler().getConfig())
-            threadManager.ThreadManager().add(regmod, identifier)
+            if isinstance(regmod, moduleInterface.Module):
+                threadManager.ThreadManager().add(regmod, identifier)
+            else:
+                print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         else:
             return
     except Exception:
