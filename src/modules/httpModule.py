@@ -45,7 +45,7 @@ class HTTP(moduleInterface.Module):
     def __init__(self, conf):
         """
         Constructor sets up configs, threadManager object
-        and various booleans
+        and thread execution flag
         """
         
         self.conn = None
@@ -64,7 +64,10 @@ class HTTP(moduleInterface.Module):
         
     def run(self):
         """
-        Thread method to execute on start()
+        Connect through a http proxy to a http botnet and
+        register yourself, fetch instructions and
+        reconnect interval. Handles base64 encoding/decoding
+        for requests/responses too.
         """
 
         while self.continueThread:
