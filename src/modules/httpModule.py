@@ -18,8 +18,8 @@
 #
 ################################################################################
 
-import threading
 import base64
+import threading, time
 import httplib, urllib
 
 import moduleManager
@@ -48,6 +48,7 @@ class HTTP(moduleInterface.Module):
         and various booleans
         """
         
+        self.conn = None
         self.continueThread = True
         self.tm = threadManager.ThreadManager()
         self.config = conf
@@ -59,29 +60,60 @@ class HTTP(moduleInterface.Module):
         """
         
         self.continueThread = False
+        self.conn.close()
         
     def run(self):
         """
         Thread method to execute on start()
         """
+
+        while self.continueThread:
         
-        #encoded = base64.b64encode('data to be encoded')
-        #print "Encoded: " + encoded
-        #data = base64.b64decode("MTA7MjAwMDsxMDswOzA7MzA7MTAwOzM7MjA7MTAwMDsyMDAwI3dhaXQjMTAjeENSMl8yNDNBRURCQQ==")
-        #print "Decoded: " + data
-
-        # POST method
-        #print self.config['separator']
-        conn = httplib.HTTPConnection("174.142.104.57", 3128) # fetch from a list with http proxies later
-        params = urllib.urlencode({self.config['id_grammar']: self.config['id'], self.config['build_id_grammar']: self.config['build_id']})
-        headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
-        conn.request("POST", self.config['url'], params, headers)
-        response = conn.getresponse()
-        if response.status == 404:
-            self.tm.putError(self.config['url'] + ": 404 Not Found", self)
-        data = response.read()
-        print data
-        conn.close()
-
-
+            self.conn = httplib.HTTPConnection("174.142.104.57", 3128) # fetch from a list with http proxies later
+            params = urllib.urlencode({self.config['id_grammar']: self.config['id'], self.config['build_id_grammar']: self.config['build_id']})
+            
+            # POST method
+            if self.config['method'] == "POST":
+                # encode request
+                if self.config['use_base64encoding'] == "True":
+                    params = base64.b64encode(params)
+                headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+                self.conn.request("POST", self.config['url'], params, headers)
+                
+            # GET method
+            if self.config['method'] == "GET":
+                # encode parameters
+                if self.config['use_base64encoding'] == "True":
+                    idParameter = base64.b64encode(self.config['id'])
+                    buildIdParamter = base64.b64encode(self.config['build_id'])
+                    params = urllib.urlencode({self.config['id_grammar']: idParameter, self.config['build_id_grammar']: buildIdParamter})
+                self.conn.request("GET", self.config['url'] + "?" + params)
+            
+            # get response
+            response = self.conn.getresponse()
+            if response.status != 200:
+                self.tm.putError(self.config['url'] + ": " + str(response.status) + " status code", self)
+                return
+            data = response.read()
+            self.conn.close()
+            
+            # decode response
+            if self.config['use_base64decoding'] == "True":
+                try:
+                    data = base64.b64decode(data)
+                except TypeError:
+                    self.tm.putError("Could not decode data, maybe not base64 encoded, got response: " + data, self)
+                    return                   
+            
+            # Log data
+            print data
+            urlHandler.URLHandler(self.config, data).start()
+            
+            # get wait grammar to know when to reconnect again
+            try:
+                wait = int(data.split(self.config['wait_grammar'])[1].split(self.config['response_separator'])[1])
+            except IndexError:
+                self.tm.putError("Could not split out wait grammar, maybe base64 decoding is necessary, got response: " + data, self)
+                return
+            time.sleep(wait)
         

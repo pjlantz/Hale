@@ -134,7 +134,6 @@ class ThreadManager(object):
             print "No such id running"
             return
         self.threads[threadId].doStop()
-        self.threads[threadId].join()
         self.threads.pop(threadId)
         
     def getAll(self):
