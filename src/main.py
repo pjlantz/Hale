@@ -23,6 +23,8 @@ import threading, time
 from conf import configHandler
 from modules import moduleManager
 from utils import threadManager
+from xmpp import producerBot
+from ConfigParser import *
 
 if os.name == "nt":
     try:
@@ -58,6 +60,10 @@ class CLI(cmd.Cmd):
         self.config = configHandler.ConfigHandler()
         self.modlist = []
         
+        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
+        self.bot = producerBot.ProducerBot(self.xmppConf)
+        self.bot.run()
+        
     def do_exec(self, arg):
         """
         Execute a module with the current config. 
@@ -69,6 +75,17 @@ class CLI(cmd.Cmd):
             print "Usage: exec modulename identifier"
             return
         moduleManager.execute(args[0], args[1])
+        
+    def do_xmpprel(self, arg):
+        """
+        Reload the XMPP configuration and restart
+        the bot
+        """
+         
+        self.bot.disconnect(reconnect=True)
+        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
+        self.bot = producerBot.ProducerBot(self.xmppConf)
+        print "Reloaded XMPP config and restarted the bot"
         
     def do_stop(self, arg):
         """
@@ -154,9 +171,11 @@ class CLI(cmd.Cmd):
         Exit the program gracefully
         """
         
+        print "Wait while quitting.."
         self.managerThread.stop()
         self.managerThread.join()
         threadManager.ThreadManager().stopAll()
+        self.bot.disconnect()
         sys.exit(0)
         
 class ManagerThread(threading.Thread):

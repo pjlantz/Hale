@@ -21,6 +21,7 @@
 import base64
 import threading, time
 import httplib, urllib
+from xmpp import producerBot
 
 import moduleManager
 from utils import *
@@ -48,6 +49,7 @@ class HTTP(moduleInterface.Module):
         and thread execution flag
         """
         
+        self.bot = producerBot.ProducerBot()
         self.conn = None
         self.continueThread = True
         self.tm = threadManager.ThreadManager()
@@ -71,7 +73,7 @@ class HTTP(moduleInterface.Module):
         """
 
         while self.continueThread:
-        
+            
             self.conn = httplib.HTTPConnection("174.142.104.57", 3128) # fetch from a list with http proxies later
             params = urllib.urlencode({self.config['id_grammar']: self.config['id'], self.config['build_id_grammar']: self.config['build_id']})
             
@@ -109,7 +111,7 @@ class HTTP(moduleInterface.Module):
                     return                   
             
             # Log data
-            print data
+            self.bot.sendMessage("HTTP: " + data)
             urlHandler.URLHandler(self.config, data).start()
             
             # get wait grammar to know when to reconnect again
@@ -118,5 +120,5 @@ class HTTP(moduleInterface.Module):
             except IndexError:
                 self.tm.putError("Could not split out wait grammar, maybe base64 decoding is necessary, got response: " + data, self)
                 return
-            time.sleep(wait)
+            time.sleep(wait * 5)
         

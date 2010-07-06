@@ -63,6 +63,19 @@ class ConfigHandler(object):
             self.configFile = self.configFile.replace("/", "\\")
         self.currentSection = ""
         self.current = {}
+        
+    def loadXMPPConf(self):
+        """
+        Load configs for XMPP and return them
+        """
+        
+        self.xmppFile = "conf/hale.conf"
+        if os.name == "nt":
+            self.xmppFile = self.xmppFile.replace("/", "\\")
+        self.xmppConf = ConfigParser()
+        self.xmppConf.read(self.xmppFile)
+        
+        return self.xmppConf
        
     def listConf(self):
         """

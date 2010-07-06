@@ -21,6 +21,7 @@
 import threading, sys
 import re, urllib, hashlib, os
 from utils import threadManager
+from xmpp import producerBot 
 
 class URLHandler(threading.Thread):
     """
@@ -34,6 +35,7 @@ class URLHandler(threading.Thread):
         to download
         """
         
+        self.bot = producerBot.ProducerBot()
         self.data = data
         self.url_expre = re.compile(config['url_regexp'])
         self.extensions = self.__striplist(config['file_ext'].split(','))
@@ -64,6 +66,7 @@ class URLHandler(threading.Thread):
         Download possible malware
         """
         
+        self.bot.sendMessage("URL check: " + url)
         proxies = {'http': 'http://174.142.104.57:3128'} # fetch from a list later
         opener = urllib.FancyURLopener(proxies)
         fp = opener.open(url)

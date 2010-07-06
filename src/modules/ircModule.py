@@ -21,6 +21,7 @@
 import socket
 import sys
 import threading
+from xmpp import producerBot
 
 import moduleManager
 from utils import *
@@ -47,7 +48,8 @@ class IRC(moduleInterface.Module):
         and various booleans used for network registration
         when connecting to a IRC server
         """
-
+        
+        self.bot = producerBot.ProducerBot()
         self.continueThread = True
         self.tm = threadManager.ThreadManager()
         self.config = config
@@ -59,9 +61,9 @@ class IRC(moduleInterface.Module):
         """
         Setup socket and connect to irc server
         """
-
+        
         self.irc = socks.socksocket()
-        self.irc.setproxy(socks.PROXY_TYPE_SOCKS5, 'pjlantz.com', 1020) # fetch from master node or db later
+        #self.irc.setproxy(socks.PROXY_TYPE_SOCKS5, 'pjlantz.com', 1020) # fetch from master node or db later
         
         self.irc.connect((self.config['network'], int(self.config['port'])))
         if self.config['password'] != 'None':
@@ -131,13 +133,13 @@ class IRC(moduleInterface.Module):
             return
         elif data.find(self.config['topic_grammar']) != -1: # Topic
             # Log topic info
-            pass
+            self.bot.sendMessage("IRC: Got new topic set")
         elif data.find(self.config['currenttopic_grammar']) != -1: # Current topic
             # Log current topic info
-            pass
+            self.bot.sendMessage("IRC: Got current channel topic on join")
         elif data.find(self.config['privmsg_grammar']) != -1: # privmsg
             # Log privmsg
-            pass
+            self.bot.sendMessage("IRC: Got message")
         elif data.find(self.config['notice_grammar']) != -1: # notice
             # Log notice
             pass
