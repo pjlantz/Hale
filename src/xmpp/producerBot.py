@@ -18,11 +18,7 @@
 #
 ################################################################################
 
-import sleekxmpp, random
-from sleekxmpp.xmlstream.handler.callback import Callback
-from sleekxmpp.xmlstream.matcher.xpath import MatchXPath
-from sleekxmpp.stanza.iq import Iq
-import coordinationStanza
+import sleekxmpp, random, time
 
 class Singleton(type):
     """
@@ -64,6 +60,7 @@ class ProducerBot(object):
         
         self.currentId = 0
         self.monitoredBotnets = []
+        self.foundTrack = False
         self.password = xmppConf.get("xmpp", "password")
         self.server = xmppConf.get("xmpp", "server")
         self.jid = xmppConf.get("xmpp", "jid");
@@ -77,8 +74,7 @@ class ProducerBot(object):
         self.xmpp.registerPlugin("xep_0045")
         self.xmpp.add_event_handler("session_start", self.handleXMPPConnected)
         self.xmpp.add_event_handler("disconnected", self.handleXMPPDisconnected)
-        self.xmpp.registerHandler(Callback('TrackReq Handler', MatchXPath('{%s}iq/{%s}trackReq' % (self.xmpp.default_ns, coordinationStanza.TrackReq.namespace)), self.handle_trackReq))
-        self.xmpp.stanzaPlugin(Iq, coordinationStanza.TrackReq)
+        self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage) 
         
     def disconnect(self, reconnect=False):
         """
@@ -123,11 +119,13 @@ class ProducerBot(object):
         self.currentId = randomId
         msg = 'trackReq id=' + randomId + " " + 'botnet=' + botnet
         self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
-        #t = threading.Timer(30.0, method)
-        #t.start() 
+        time.sleep(2)
+        self.currentId = 0
+        if self.foundTrack:
+            self.foundTrack = False
+            return True
         self.monitoredBotnets.append(botnet)
-        return True
-        
+        return False 
         
     def removeBotnet(self, botnet):
         """
@@ -135,6 +133,36 @@ class ProducerBot(object):
         """
         
         self.monitoredBotnets.remove(botnet)
+        
+    def getMonitoredBotnets(self):
+        """
+        TODO
+        """
+        
+        return self.monitoredBotnets
+        
+    def handleIncomingGroupChatMessage(self, message):
+        """
+        TODO
+        """
+        
+        channel = str(message['from'])
+        coordchan = self.coordchannel.split('@')[0]
+        if channel.split('@')[0] == coordchan:
+            body = message['body'].split(' ')
+            if body[0] == 'trackReq' and len(body) == 3:
+                idStr = body[1].split('=')[1]
+                botnetStr = body[2].split('=')[1]
+                
+                if botnetStr in self.monitoredBotnets and idStr != self.currentId:
+                    msg = "trackAnswer id=" + idStr
+                    self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
+                    
+            if body[0] == 'trackAnswer' and len(body) == 2:
+                idStr = body[1].split('=')[1]
+                if self.currentId == idStr:
+                    self.foundTrack = True
+                 
     
     def sendLog(self, msg):
         """

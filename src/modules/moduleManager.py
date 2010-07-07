@@ -61,10 +61,15 @@ def execute(module, identifier):
         if configHandler.ConfigHandler().correctConfig(module):
             regmod = func(configHandler.ConfigHandler().getConfig())
             if isinstance(regmod, moduleInterface.Module):
-                if producerBot.ProducerBot().sendTrackReq(configHandler.ConfigHandler().getConfig()['botnet']):
-                    threadManager.ThreadManager().add(regmod, identifier)
+                monitored = producerBot.ProducerBot().getMonitoredBotnets()
+                botnet = configHandler.ConfigHandler().getConfig()['botnet']
+                if botnet not in monitored:
+                    if not producerBot.ProducerBot().sendTrackReq(botnet):
+                        threadManager.ThreadManager().add(regmod, identifier)
+                    else:
+                        print "Botnet already monitored!"
                 else:
-                    print "Botnet already monitored!"
+                    print "You are already monitoring this!"
             else:
                 print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         else:
