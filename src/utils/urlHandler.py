@@ -66,7 +66,7 @@ class URLHandler(threading.Thread):
         Download possible malware
         """
         
-        self.bot.sendMessage("URL check: " + url)
+        self.bot.sendLog("URL check: " + url)
         proxies = {'http': 'http://174.142.104.57:3128'} # fetch from a list later
         opener = urllib.FancyURLopener(proxies)
         fp = opener.open(url)

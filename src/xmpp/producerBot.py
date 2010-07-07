@@ -18,7 +18,11 @@
 #
 ################################################################################
 
-import sleekxmpp
+import sleekxmpp, random
+from sleekxmpp.xmlstream.handler.callback import Callback
+from sleekxmpp.xmlstream.matcher.xpath import MatchXPath
+from sleekxmpp.stanza.iq import Iq
+import coordinationStanza
 
 class Singleton(type):
     """
@@ -58,6 +62,8 @@ class ProducerBot(object):
         plugins
         """
         
+        self.currentId = 0
+        self.monitoredBotnets = []
         self.password = xmppConf.get("xmpp", "password")
         self.server = xmppConf.get("xmpp", "server")
         self.jid = xmppConf.get("xmpp", "jid");
@@ -71,6 +77,8 @@ class ProducerBot(object):
         self.xmpp.registerPlugin("xep_0045")
         self.xmpp.add_event_handler("session_start", self.handleXMPPConnected)
         self.xmpp.add_event_handler("disconnected", self.handleXMPPDisconnected)
+        self.xmpp.registerHandler(Callback('TrackReq Handler', MatchXPath('{%s}iq/{%s}trackReq' % (self.xmpp.default_ns, coordinationStanza.TrackReq.namespace)), self.handle_trackReq))
+        self.xmpp.stanzaPlugin(Iq, coordinationStanza.TrackReq)
         
     def disconnect(self, reconnect=False):
         """
@@ -84,9 +92,9 @@ class ProducerBot(object):
         """
         Connect to XMPP server and start thread
         """
-        
+
         self.xmpp.connect((self.server, int(self.port)))
-        self.xmpp.process(threaded = True)
+        self.xmpp.process()
         
     def handleXMPPDisconnected(self, event):
     
@@ -103,7 +111,32 @@ class ProducerBot(object):
         join = muc.joinMUC(self.sharechannel, self.jid.split('@')[0], password=self.sharepass)
         join = muc.joinMUC(self.coordchannel, self.jid.split('@')[0], password=self.coordpass)
         
-    def sendMessage(self, msg):
+    def handle_trackReq(self, iqObject):
+        print "got trackreq!"
+        
+    def sendTrackReq(self, botnet):
+        """
+        TODO
+        """
+        
+        randomId = str(random.randint(1, 10000))
+        self.currentId = randomId
+        msg = 'trackReq id=' + randomId + " " + 'botnet=' + botnet
+        self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
+        #t = threading.Timer(30.0, method)
+        #t.start() 
+        self.monitoredBotnets.append(botnet)
+        return True
+        
+        
+    def removeBotnet(self, botnet):
+        """
+        TODO
+        """
+        
+        self.monitoredBotnets.remove(botnet)
+    
+    def sendLog(self, msg):
         """
         Send logs to group room
         """

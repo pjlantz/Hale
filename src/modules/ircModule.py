@@ -65,7 +65,7 @@ class IRC(moduleInterface.Module):
         self.irc = socks.socksocket()
         #self.irc.setproxy(socks.PROXY_TYPE_SOCKS5, 'pjlantz.com', 1020) # fetch from master node or db later
         
-        self.irc.connect((self.config['network'], int(self.config['port'])))
+        self.irc.connect((self.config['botnet'], int(self.config['port'])))
         if self.config['password'] != 'None':
             self.irc.send(self.config['pass_grammar'] + ' ' + self.config['password'] + '\r\n')
 
@@ -92,6 +92,7 @@ class IRC(moduleInterface.Module):
         Stop this thread
         """
        
+        self.bot.removeBotnet(self.config['botnet'])
         try:
             self.continueThread = False
             self.irc.shutdown(socket.SHUT_RDWR)
@@ -133,13 +134,13 @@ class IRC(moduleInterface.Module):
             return
         elif data.find(self.config['topic_grammar']) != -1: # Topic
             # Log topic info
-            self.bot.sendMessage("IRC: Got new topic set")
+            self.bot.sendLog("IRC: Got new topic set")
         elif data.find(self.config['currenttopic_grammar']) != -1: # Current topic
             # Log current topic info
-            self.bot.sendMessage("IRC: Got current channel topic on join")
+            self.bot.sendLog("IRC: Got current channel topic on join")
         elif data.find(self.config['privmsg_grammar']) != -1: # privmsg
             # Log privmsg
-            self.bot.sendMessage("IRC: Got message")
+            self.bot.sendLog("IRC: Got message")
         elif data.find(self.config['notice_grammar']) != -1: # notice
             # Log notice
             pass

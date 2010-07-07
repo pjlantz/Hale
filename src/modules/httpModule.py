@@ -61,6 +61,7 @@ class HTTP(moduleInterface.Module):
         Stop module execution
         """
         
+        self.bot.removeBotnet(self.config['botnet'])
         self.continueThread = False
         self.conn.close()
         
@@ -83,7 +84,7 @@ class HTTP(moduleInterface.Module):
                 if self.config['use_base64encoding'] == "True":
                     params = base64.b64encode(params)
                 headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
-                self.conn.request("POST", self.config['url'], params, headers)
+                self.conn.request("POST", self.config['botnet'], params, headers)
                 
             # GET method
             if self.config['method'] == "GET":
@@ -92,7 +93,7 @@ class HTTP(moduleInterface.Module):
                     idParameter = base64.b64encode(self.config['id'])
                     buildIdParamter = base64.b64encode(self.config['build_id'])
                     params = urllib.urlencode({self.config['id_grammar']: idParameter, self.config['build_id_grammar']: buildIdParamter})
-                self.conn.request("GET", self.config['url'] + "?" + params)
+                self.conn.request("GET", self.config['botnet'] + "?" + params)
             
             # get response
             response = self.conn.getresponse()
@@ -111,7 +112,7 @@ class HTTP(moduleInterface.Module):
                     return                   
             
             # Log data
-            self.bot.sendMessage("HTTP: " + data)
+            self.bot.sendLog("HTTP: " + data)
             urlHandler.URLHandler(self.config, data).start()
             
             # get wait grammar to know when to reconnect again

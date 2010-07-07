@@ -22,6 +22,7 @@ import os, sys
 from conf import configHandler
 from utils import threadManager
 from utils import moduleInterface
+from xmpp import producerBot
 
 # maps module names with registered functions
 modules = {}
@@ -60,7 +61,10 @@ def execute(module, identifier):
         if configHandler.ConfigHandler().correctConfig(module):
             regmod = func(configHandler.ConfigHandler().getConfig())
             if isinstance(regmod, moduleInterface.Module):
-                threadManager.ThreadManager().add(regmod, identifier)
+                if producerBot.ProducerBot().sendTrackReq(configHandler.ConfigHandler().getConfig()['botnet']):
+                    threadManager.ThreadManager().add(regmod, identifier)
+                else:
+                    print "Botnet already monitored!"
             else:
                 print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         else:
