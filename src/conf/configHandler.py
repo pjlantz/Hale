@@ -57,10 +57,10 @@ class ConfigHandler(object):
         Constructor, create parser
         """
        
-        self.config = ConfigParser()
-        self.configFile = "conf/modules.conf"
+        self.currentConfig = ConfigParser()
+        self.currentConfigFile = "conf/modules.conf"
         if os.name == "nt":
-            self.configFile = self.configFile.replace("/", "\\")
+            self.currentConfigFile = self.currentConfigFile.replace("/", "\\")
         self.currentSection = ""
         self.current = {}
         
@@ -83,16 +83,16 @@ class ConfigHandler(object):
         """
 
         tabs = ""
-        self.config = ConfigParser()
-        self.config.read(self.configFile)
+        self.currentConfig = ConfigParser()
+        self.currentConfig.read(self.currentConfigFile)
         lsStr = "\nConfig name\tFor module\n==========================\n"
         try:
-            for section in self.config.sections():
+            for section in self.currentConfig.sections():
                 if len(section) <= 7:
                     tabs = "\t\t"
                 else:
                     tabs = "\t"
-                lsStr += section + tabs + "[" + self.config.get(section, "module") + "]\n"
+                lsStr += section + tabs + "[" + self.currentConfig.get(section, "module") + "]\n"
         except Exception:
             print "[ConfigHandler]:", sys.exc_info()[1]
             return
@@ -110,11 +110,11 @@ class ConfigHandler(object):
                 print "[ConfigHandler]: Using " + self.currentSection
             return
         
-        self.config = ConfigParser()
-        self.config.read(self.configFile)
+        self.currentConfig = ConfigParser()
+        self.currentConfig.read(self.currentConfigFile)
         try:
-            for option in self.config.options(section):
-                self.current[option] = self.config.get(section, option)
+            for option in self.currentConfig.options(section):
+                self.current[option] = self.currentConfig.get(section, option)
         except NoSectionError:
             print "[ConfigHandler]: No such config " + section
             return
@@ -134,12 +134,12 @@ class ConfigHandler(object):
         with module named 'module'
         """
 
-        self.config = ConfigParser()
-        self.config.read(self.configFile)
-        for section in self.config.sections():
-            options = self.config.options(section)
+        self.currentConfig = ConfigParser()
+        self.currentConfig.read(self.currentConfigFile)
+        for section in self.currentConfig.sections():
+            options = self.currentConfig.options(section)
             for option in options:
-                if option == "module" and self.config.get(section, option) == module:
+                if option == "module" and self.currentConfig.get(section, option) == module:
                     for opt in options:
                         try:
                             op = self.current[opt]

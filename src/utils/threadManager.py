@@ -20,6 +20,7 @@
 
 import Queue
 from threading import Lock
+from xmpp import producerBot
 
 class synchronized(object):
     """ 
@@ -105,8 +106,7 @@ class ThreadManager(object):
         for key, value in self.threads.items():
             if value == thread:
                 self.bucket.put(exception) # add more info later
-                thread.doStop()
-                self.threads.pop(key)
+                self.stop(key)
                 return
 
         # exceptions from non-modules, eg. urlHandler 
@@ -133,6 +133,7 @@ class ThreadManager(object):
         if threadId not in self.threads.keys():
             print "No such id running"
             return
+        producerBot.ProducerBot().removeBotnet(self.threads[threadId].getConfig()['botnet'])
         self.threads[threadId].doStop()
         self.threads.pop(threadId)
         

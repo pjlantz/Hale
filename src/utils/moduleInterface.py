@@ -28,7 +28,15 @@ class Module(threading.Thread):
     """
 
     __metaclass__ = abc.ABCMeta
-   
+
+    @abc.abstractmethod
+    def getConfig(self):
+        """
+        Return configuration used by this module
+        """
+        
+        return
+
     @abc.abstractmethod
     def doStop(self):
         """

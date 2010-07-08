@@ -21,8 +21,8 @@
 import base64
 import threading, time
 import httplib, urllib
-from xmpp import producerBot
 
+from xmpp import producerBot
 import moduleManager
 from utils import *
 
@@ -56,12 +56,18 @@ class HTTP(moduleInterface.Module):
         self.config = conf
         threading.Thread.__init__(self)
         
+    def getConfig(self):
+        """
+        Return configuration used by this module
+        """
+        
+        return self.config
+        
     def doStop(self):
         """
         Stop module execution
         """
         
-        self.bot.removeBotnet(self.config['botnet'])
         self.continueThread = False
         self.conn.close()
         
@@ -98,7 +104,7 @@ class HTTP(moduleInterface.Module):
             # get response
             response = self.conn.getresponse()
             if response.status != 200:
-                self.tm.putError(self.config['url'] + ": " + str(response.status) + " status code", self)
+                self.tm.putError(self.config['botnet'] + ": " + str(response.status) + " status code", self)
                 return
             data = response.read()
             self.conn.close()

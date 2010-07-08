@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-import os, sys
+import os, sys, copy
 from conf import configHandler
 from utils import threadManager
 from utils import moduleInterface
@@ -59,10 +59,11 @@ def execute(module, identifier):
     func = modules[module]
     try:
         if configHandler.ConfigHandler().correctConfig(module):
-            regmod = func(configHandler.ConfigHandler().getConfig())
+            confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
+            regmod = func(confCopy)
             if isinstance(regmod, moduleInterface.Module):
                 monitored = producerBot.ProducerBot().getMonitoredBotnets()
-                botnet = configHandler.ConfigHandler().getConfig()['botnet']
+                botnet = confCopy['botnet']
                 if botnet not in monitored:
                     if not producerBot.ProducerBot().sendTrackReq(botnet):
                         threadManager.ThreadManager().add(regmod, identifier)

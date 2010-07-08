@@ -86,13 +86,19 @@ class IRC(moduleInterface.Module):
             self.irc.send(self.config['join_grammar'] + ' ' + self.config['channel'] + '\r\n')
             
         self.doJoin = False      
+        
+    def getConfig(self):
+        """
+        Return configuration used by this module
+        """
+        
+        return self.config
             
     def doStop(self):
         """
         Stop this thread
         """
        
-        self.bot.removeBotnet(self.config['botnet'])
         try:
             self.continueThread = False
             self.irc.shutdown(socket.SHUT_RDWR)

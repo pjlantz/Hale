@@ -19,6 +19,31 @@
 ################################################################################
 
 import sleekxmpp, random, time
+from threading import Lock
+
+class synchronized(object):
+    """ 
+    Class enapsulating a lock and a function
+    allowing it to be used as a synchronizing
+    decorator making the wrapped function
+    thread-safe 
+    """
+    
+    def __init__(self, *args):
+        self.lock = Lock()
+        
+    def __call__(self, f):
+        def lockedfunc(*args, **kwargs):
+            try:
+                self.lock.acquire()
+                try:
+                    return f(*args, **kwargs)
+                except Exception, e:
+                    raise
+            finally:
+                self.lock.release()
+
+        return lockedfunc
 
 class Singleton(type):
     """
@@ -106,13 +131,15 @@ class ProducerBot(object):
         muc = self.xmpp.plugin["xep_0045"]
         join = muc.joinMUC(self.sharechannel, self.jid.split('@')[0], password=self.sharepass)
         join = muc.joinMUC(self.coordchannel, self.jid.split('@')[0], password=self.coordpass)
-        
-    def handle_trackReq(self, iqObject):
-        print "got trackreq!"
-        
+     
+    @synchronized()   
     def sendTrackReq(self, botnet):
         """
-        TODO
+        Send a trackReq to let other sensors know
+        that its going to monitor a specific botnet.
+        Returns False if the request does not receive a 
+        an ack on this request, meaning no one is monitoring
+        the botnet. Otherwise True if someone is monitoring.
         """
         
         randomId = str(random.randint(1, 10000))
@@ -129,21 +156,23 @@ class ProducerBot(object):
         
     def removeBotnet(self, botnet):
         """
-        TODO
+        Remove a botnet from the list of 
+        monited ones
         """
         
         self.monitoredBotnets.remove(botnet)
         
     def getMonitoredBotnets(self):
         """
-        TODO
+        Return the list of monitored botnets
         """
         
         return self.monitoredBotnets
         
     def handleIncomingGroupChatMessage(self, message):
         """
-        TODO
+        Handles groupchat messages from the coordination
+        channel
         """
         
         channel = str(message['from'])
@@ -166,7 +195,7 @@ class ProducerBot(object):
     
     def sendLog(self, msg):
         """
-        Send logs to group room
+        Send logs to the data sharing channel
         """
         
         self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
