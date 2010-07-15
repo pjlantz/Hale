@@ -28,6 +28,10 @@ class IRC(moduleInterface.Module):
    # must be implemented
    def run(self):
        # start execution
+   
+   # must be implemented    
+   def getConfig(self):
+       return self.config
 
 Add decorator for the register function (in this case module_setup)
 which will be called with the current configuration as argument. This 
