@@ -2,9 +2,8 @@ Howto add modules, the current module API work as follow:
 
 1) Implement module, for example:
 
-import moduleManager, threading
+import moduleManager
 from utils import moduleInterface
-from utils import threadManager
 
 @moduleManager.register("irc")
 def module_setup(config):
@@ -21,26 +20,14 @@ class IRC(moduleInterface.Module):
 
    def __init__(self, config):
        self.config = config
-       self.continueThread = True
-       self.tm = threadManager.ThreadManager()
-       threading.Thread.__init__ (self)
    
    # must be implemented
-   def doStop(self):
-       self.continueThread = False
+   def stop(self):
+       # stop execution
    
    # must be implemented
    def run(self):
-       try:
-           # setup sockets
-       except Exception:
-           self.tm.putError("Error connecting", self)
-       ...
-       while (self.continueThread):
-           try:
-               # Log etc
-           except Exception:
-               self.tm.putError("Error during connection", self)
+       # start execution
 
 Add decorator for the register function (in this case module_setup)
 which will be called with the current configuration as argument. This 
@@ -53,9 +40,10 @@ Also follow the naming convention nameModule.py and @moduleManager.register("nam
 and import the moduleManager, if not the moduleManager will notify 
 you about any errors.
 
-Catch all possible exceptions and send them to the thread manager
-error bucket which takes care of all errors from every thread 
-running in the monitor system. 
+Catch all possible exceptions and send them to the module coordinator
+error bucket which takes care of all errors from every module running 
+in the monitor system. These errors can be shown with the 'showlog' command
+in the CLI
 
 2) Drag the file to the modules directory. The moduleManager will
 then automatically import it and check for errors.
