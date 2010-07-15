@@ -78,9 +78,6 @@ class IRC(moduleInterface.Module):
 class IRCProtocol(Protocol):
 
     factory = None
-    
-    def __call__(self):
-        print "Call!"
 
     def connectionMade(self):
         """
@@ -138,9 +135,6 @@ class IRCClientFactory(ClientFactory):
         
         self.config = config
         self.firstPing = True
-        
-    def buildProtocol(self,a):
-        print "Buildproto!"
 
     def getConfig(self):
         """
