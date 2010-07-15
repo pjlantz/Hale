@@ -20,7 +20,7 @@
 
 import os, sys, copy, asyncore
 from conf import configHandler
-from utils import md
+from utils import moduleCoordinator
 from utils import moduleInterface
 #from xmpp import producerBot
 

@@ -57,8 +57,9 @@ class IRC(moduleInterface.Module):
         factory = IRCClientFactory(self.config)
         host = self.config['botnet']
         port = int(self.config['port'])
-        self.connector = reactor.connectTCP(host, port, factory)       
-            
+        socksify = socks5.ProxyClientCreator(reactor, factory)
+        self.connector = socksify.connectSocks5Proxy(host, port, "127.0.0.1", 1080, "HALE")
+        
     def stop(self):
         """
         Stop execution
@@ -75,6 +76,11 @@ class IRC(moduleInterface.Module):
         return self.config
         
 class IRCProtocol(Protocol):
+
+    factory = None
+    
+    def __call__(self):
+        print "Call!"
 
     def connectionMade(self):
         """
@@ -103,12 +109,14 @@ class IRCProtocol(Protocol):
 				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + '\r\n')
 				self.factory.setFirstPing()
         elif data.find(self.factory.getConfig()['topic_grammar']) != -1: # topic
-           pass
+           print "new topic!"
+           #pass
         elif data.find(self.factory.getConfig()['currenttopic_grammar']) != -1: # currenttopic
 	        pass
         elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
+            print "new privmsg!"
             #moduleCoordinator.ModuleCoordinator().addEvent(md.LOG_EVENT, "Got irc messsage!")
-            pass
+            #pass
         elif data.find(self.factory.getConfig()['notice_grammar']) != -1: # notice
             pass
         elif data.find(self.factory.getConfig()['mode_grammar']) != -1: # mode
@@ -127,8 +135,12 @@ class IRCClientFactory(ClientFactory):
         Constructor, sets first ping received flag
         and config to be used
         """
+        
         self.config = config
         self.firstPing = True
+        
+    def buildProtocol(self,a):
+        print "Buildproto!"
 
     def getConfig(self):
         """
@@ -144,6 +156,11 @@ class IRCClientFactory(ClientFactory):
         
         return self.getFirstPing
         
+    def __call__(self):
+        p = self.protocol()
+        p.factory = self
+        return p
+        
     def setFirstPing(self):
         """
         Set first ping flag to indicate
@@ -151,3 +168,7 @@ class IRCClientFactory(ClientFactory):
         """
         
         self.firstPing = False
+        
+    def clientConnectionFailed(self, connector, reason):
+        print 'Failed to connect to:', connector.getDestination()
+        self.poem_finished()

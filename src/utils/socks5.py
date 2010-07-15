@@ -75,7 +75,6 @@ server.
         # prepare connection string with available authentication methods
         #
 	
-        log.debug ("SOCKS5.connectionMade")
         methods = "\x00"
         if not self.login is None: methods += "\x02"
 
@@ -85,7 +84,6 @@ server.
         self.state = "gotHelloReply"
 
     def dataReceived (self, data):
-        log.debug ("SOCKS state=" + self.state)
         method = getattr(self, 'socks_%s' % (self.state), 
             self.socks_thisMustNeverHappen)
         method (data)
@@ -112,7 +110,6 @@ self)))
         if data == "\x05\xFF":
             # No acceptable methods. We MUST close
             #
-	    log.debug("No acceptable methods, closing connection")
             self.transport.loseConnection()
             return
 
@@ -164,7 +161,6 @@ self)))
     def socks_method_CONNECT (self):
         # Check if we have ip address or domain name
         #
-	log.debug("socks_method_CONNECT host = " + self.host)
 
  	# The FaceTime SOCKS5 proxy treats IP addr the same way as hostname
        # if _ip_regex.match (self.host):
@@ -274,10 +270,11 @@ class ClientConnector (tcp.Connector):
             socksport=socksport, host=host, port=port, login=login,
             password=password, otherFactory=otherFactory, timeout=timeout,
             readableID=readableID)
-
-        tcp.Connector.__init__ (self, host=sockshost, port=socksport,
-            factory=factory, timeout=timeout, bindAddress=None,
-            reactor=reactor)
+            
+        self.conn = reactor.connectTCP(host=sockshost, port=socksport,factory=factory, timeout=timeout, bindAddress=None)
+            
+    def disconnect(self):
+        self.conn.disconnect()
 
 class ClientFactory (protocol.ClientFactory):
     def __init__(self, sockshost, socksport, host, port, otherFactory,
@@ -315,7 +312,7 @@ class ClientFactory (protocol.ClientFactory):
         # Set global timeout
         #
 	if self.timeout is not None:
-           log.msg ("Set timeout %d sec" % self.timeout)
+           #log.msg ("Set timeout %d sec" % self.timeout)
            delayedcall = reactor.callLater (self.timeout, self.onTimeout,
            				    connector)
            setattr (self, "delayed_timeout_call", delayedcall)
@@ -329,7 +326,7 @@ class ClientFactory (protocol.ClientFactory):
         and unconditionally in the whatever state I am.
         """
         connector.disconnect()
-        log.msg ("%s timeout %d sec" % (self, self.timeout))
+        #log.msg ("%s timeout %d sec" % (self, self.timeout))
         self.clientConnectionFailed (self, failure.Failure (
             GlobalTimeoutError ("Timeout %s" % self)))
 
@@ -363,12 +360,12 @@ class ClientFactory (protocol.ClientFactory):
         # If flag indicates that connection may not be lost
         #
         rmap = {"reason": reason, "socks": self.status}
-
+        
         try:
             if self.status != "established":
                 # Tell about error
                 #
-                log.msg ("Connection LOST before SOCKS established %s" % self)
+                #log.msg ("Connection LOST before SOCKS established %s" % self)
                 self.otherFactory.clientConnectionFailed (connector, rmap)
             else:
                 self.otherFactory.clientConnectionLost (connector, rmap)
@@ -384,7 +381,7 @@ class ClientFactory (protocol.ClientFactory):
 
         try:
             if self.status != "established":
-                log.msg ("Connection FAILED before SOCKS established %s" % self)
+                #log.msg ("Connection FAILED before SOCKS established %s" % self)
                 self.otherFactory.clientConnectionFailed (connector, rmap)
             else:
                 self.otherFactory.clientConnectionFailed (connector, rmap)
@@ -398,14 +395,9 @@ class ProxyClientCreator(protocol.ClientCreator):
 
 	def connectSocks5Proxy(self,remotehost,remoteport,proxy,proxyport,id):
 	   d = defer.Deferred()
-	   f = protocol._InstanceFactory(self.reactor,
-	                                self.protocolClass(*self.args, **self.kwargs),d)
-	   self.reactor.connectWith(ClientConnector,
-			            host=remotehost,port=remoteport,
-				    sockshost=proxy,socksport=proxyport,
-				    otherFactory=f,
-				    readableID=id)
-	   return d
+	   f = protocol._InstanceFactory(self.reactor,self.protocolClass(*self.args, **self.kwargs),d)
+	   c = ClientConnector(host=remotehost,port=remoteport,sockshost=proxy,socksport=proxyport,otherFactory=f,reactor=self.reactor)
+	   return c
 
 
 
