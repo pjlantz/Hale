@@ -18,13 +18,11 @@
 #
 ################################################################################
 
-import socket
-import sys
-import threading
-from xmpp import producerBot
-
-import moduleManager
 from utils import *
+import moduleManager
+
+from twisted.internet import reactor, defer
+from twisted.internet.protocol import Protocol, ClientFactory
 
 @moduleManager.register("irc")
 def setup_module(config):
@@ -49,115 +47,107 @@ class IRC(moduleInterface.Module):
         when connecting to a IRC server
         """
         
-        self.bot = producerBot.ProducerBot()
-        self.continueThread = True
-        self.tm = threadManager.ThreadManager()
         self.config = config
-        self.doJoin = False
-        self.firstPing = True
-        threading.Thread.__init__(self)
-   
-    def __doConnect(self):
+         
+    def run(self):
         """
-        Setup socket and connect to irc server
+        Start execution
         """
         
-        self.irc = socks.socksocket()
-        #self.irc.setproxy(socks.PROXY_TYPE_SOCKS5, 'pjlantz.com', 1020) # fetch from master node or db later
-        
-        self.irc.connect((self.config['botnet'], int(self.config['port'])))
-        if self.config['password'] != 'None':
-            self.irc.send(self.config['pass_grammar'] + ' ' + self.config['password'] + '\r\n')
+        factory = IRCClientFactory(self.config)
+        host = self.config['botnet']
+        port = int(self.config['port'])
+        self.connector = reactor.connectTCP(host, port, factory)       
+            
+    def stop(self):
+        """
+        Stop execution
+        """
 
-        self.irc.send(self.config['nick_grammar'] + ' ' + self.config['nick'] + '\r\n')
-        self.irc.send(self.config['user_grammar'] + ' ' + self.config['username'] + ' ' + 
-        self.config['username'] + ' ' + self.config['username'] + ' :' + 
-        self.config['realname'] + '\r\n')
-            
-    def __doJoin(self):
-        """
-        Join channel specified in the configuration
-        """
+        self.connector.disconnect()
         
-        if self.config['channel_pass'] != 'None':
-            self.irc.send(self.config['join_grammar'] + ' ' + self.config['channel'] + ' ' + 
-            self.config['channel_pass'] + '\r\n')
-        else:
-            self.irc.send(self.config['join_grammar'] + ' ' + self.config['channel'] + '\r\n')
-            
-        self.doJoin = False      
-        
+                
     def getConfig(self):
         """
-        Return configuration used by this module
+        Return specific configuration used by this module
         """
         
         return self.config
-            
-    def doStop(self):
-        """
-        Stop this thread
-        """
-       
-        try:
-            self.continueThread = False
-            self.irc.shutdown(socket.SHUT_RDWR)
-            self.irc.close()
-        except Exception:
-            self.tm.putError(sys.exc_info()[1], self)
-                   
-    def run(self):
-        """
-        Make connection and define thread loop
-        """ 
         
-        try:
-            self.__doConnect()
-        except Exception:
-            self.tm.putError(sys.exc_info()[1], self)
-            
-        while (self.continueThread):
-            try:
-                self.__handleProtocol()
-            except Exception:
-                self.tm.putError(sys.exc_info()[1], self)
-                   
-    def __handleProtocol(self):
-        """
-        Handle incoming irc protocol and responses
-        """
-        
-        if self.doJoin: # after registration
-            self.__doJoin()
-        
-        data = self.irc.recv(1024)
+class IRCProtocol(Protocol):
 
-        if data.find(self.config['ping_grammar']) != -1: # Ping
-            self.irc.send(self.config['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # Pong
-            if self.firstPing:
-                self.doJoin = True # registered and ready to join
-                self.firstPing = False
-            return
-        elif data.find(self.config['topic_grammar']) != -1: # Topic
-            # Log topic info
-            self.bot.sendLog("IRC: Got new topic set")
-        elif data.find(self.config['currenttopic_grammar']) != -1: # Current topic
-            # Log current topic info
-            self.bot.sendLog("IRC: Got current channel topic on join")
-        elif data.find(self.config['privmsg_grammar']) != -1: # privmsg
-            # Log privmsg
-            self.bot.sendLog("IRC: Got message")
-        elif data.find(self.config['notice_grammar']) != -1: # notice
-            # Log notice
+    def connectionMade(self):
+        """
+        When connection is made
+        """
+        
+        if self.factory.getConfig()['password'] != 'None':
+            self.transport.write(self.factory.getConfig()['pass_grammar'] + ' ' + self.factory.getConfig()['password'] + '\r\n')
+        self.transport.write(self.factory.getConfig()['nick_grammar'] + ' ' + self.factory.getConfig()['nick'] + '\r\n')
+        self.transport.write(self.factory.getConfig()['user_grammar'] + ' ' + self.factory.getConfig()['username'] + ' ' + 
+        self.factory.getConfig()['username'] + ' ' + self.factory.getConfig()['username'] + ' :' + 
+        self.factory.getConfig()['realname'] + '\r\n')
+
+    def dataReceived(self, data):
+        """
+        Data is received
+        """
+        
+        if data.find(self.factory.getConfig()['ping_grammar']) != -1: # ping
+            self.transport.write(self.factory.getConfig()['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # pong
+            if self.factory.getFirstPing():
+				if self.factory.getConfig()['channel_pass'] != 'None':
+				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + ' ' + 
+				    self.factory.getConfig()['channel_pass'] + '\r\n')
+				else:
+				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + '\r\n')
+				self.factory.setFirstPing()
+        elif data.find(self.factory.getConfig()['topic_grammar']) != -1: # topic
+           pass
+        elif data.find(self.factory.getConfig()['currenttopic_grammar']) != -1: # currenttopic
+	        pass
+        elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
+            #moduleCoordinator.ModuleCoordinator().addEvent(md.LOG_EVENT, "Got irc messsage!")
             pass
-        elif data.find(self.config['mode_grammar']) != -1: # mode
-            # Log mode
+        elif data.find(self.factory.getConfig()['notice_grammar']) != -1: # notice
             pass
-        elif data.find(self.config['kick_grammar']) != -1: # kick
-            # Log kick
+        elif data.find(self.factory.getConfig()['mode_grammar']) != -1: # mode
             pass
-        else:
-            # log unrecognized commands, can also be MOTD and NAMES list
-            pass
-                    
-        urlHandler.URLHandler(self.config, data).start()
+        else: # log unrecognized commands, can also be MOTD and NAMES list
+	        pass
+	      
+        #urlHandler.URLHandler(self.factory.getConfig(), data).start() #TODO without threads
+        
+class IRCClientFactory(ClientFactory):
+
+    protocol = IRCProtocol # tell base class what proto to build
+
+    def __init__(self, config):
+        """
+        Constructor, sets first ping received flag
+        and config to be used
+        """
+        self.config = config
+        self.firstPing = True
+
+    def getConfig(self):
+        """
+        Returns config 
+        """
+        
+        return self.config
+        
+    def getFirstPing(self):
+        """
+        Returns get first ping flag
+        """
+        
+        return self.getFirstPing
+        
+    def setFirstPing(self):
+        """
+        Set first ping flag to indicate
+        that it has been received
+        """
+        
+        self.firstPing = False

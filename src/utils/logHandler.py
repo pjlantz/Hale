@@ -18,39 +18,52 @@
 #
 ################################################################################
 
-import abc
 
-class Module(object):
+# TODO LogHandler
+import time
+from twisted.internet import reactor, defer
+
+class Singleton(type):
     """
-    Defines what methods must be implemented
-    for the different modules
+    Singleton pattern used to only create one 
+    LogHandler instance
     """
-
-    __metaclass__ = abc.ABCMeta
-
-    @abc.abstractmethod
-    def getConfig(self):
-        """
-        Return configuration used by this module
-        """
-        
-        return
-
-    @abc.abstractmethod
-    def stop(self):
-        """
-        To be implemented in the various modules. Used since threadManager
-        calls this method when stopping a module. Should basically close
-        down the connection for the module.
-        """
-       
-        return
     
-    @abc.abstractmethod  
-    def run(self):
+    def __init__(cls, name, bases, dict):
         """
-        Method called when threadManager starts a module
+        Constructor
         """
         
-        return
+        super(Singleton, cls).__init__(name, bases, dict)
+        cls.instance = None
+ 
+    def __call__(cls, *args, **kw):
+        """
+        Return instance
+        """
+        
+        if cls.instance is None:
+            cls.instance = super(Singleton, cls).__call__(*args, **kw)
+ 
+        return cls.instance
+
+class LogHandler(object):
+
+    __metaclass__ = Singleton
+        
+    def handleLog(self, data):
+        d = self.putToXMPP(data)
+        if d != None:
+            d.addCallback(self.putToDB)
+            
+    def putToDB(self, data):
+        time.sleep(2)
+        print "DB: " + data
+        
+    def putToXMPP(self, data):
+        d = defer.Deferred()
+        print "XMPP: " + data
+        reactor.callLater(0, d.callback, data)
+        return d 
+        
         

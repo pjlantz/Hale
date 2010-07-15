@@ -1,2 +1,2 @@
 
-__all__ = ["threadManager", "urlHandler", "socks", "moduleInterface"]
+__all__ = ["moduleCoordinator", "urlHandler", "socks", "moduleInterface", "logHandler"]

@@ -21,7 +21,7 @@
 import threading, sys
 import re, urllib, hashlib, os
 from utils import threadManager
-from xmpp import producerBot 
+#from xmpp import producerBot 
 
 class URLHandler(threading.Thread):
     """
@@ -35,7 +35,7 @@ class URLHandler(threading.Thread):
         to download
         """
         
-        self.bot = producerBot.ProducerBot()
+        #self.bot = producerBot.ProducerBot()
         self.data = data
         self.url_expre = re.compile(config['url_regexp'])
         self.extensions = self.__striplist(config['file_ext'].split(','))
@@ -46,27 +46,23 @@ class URLHandler(threading.Thread):
         Check if data contains any url
         """
         
-        try:
-            match = self.url_expre.findall(self.data)
-            if match:
-                for entry in match:
-                    url = entry[0]
-                    fileposition = url.rfind('/')
-                    extfilename = url[fileposition + 1:]
-                    pos = url.rfind('.')
-                    extension = url[pos:].split('.')[1]
-                    if extension in self.extensions:
-                        self.__doDownload(url, extfilename)
-        except Exception:
-            threadManager.ThreadManager().putError(sys.exc_info()[1], "urlHandler")
-            return
+        match = self.url_expre.findall(self.data)
+        if match:
+            for entry in match:
+                url = entry[0]
+                fileposition = url.rfind('/')
+                extfilename = url[fileposition + 1:]
+                pos = url.rfind('.')
+                extension = url[pos:].split('.')[1]
+                if extension in self.extensions:
+                    self.__doDownload(url, extfilename)
         
     def __doDownload(self, url, extfilename):
         """
         Download possible malware
         """
         
-        self.bot.sendLog("URL check: " + url)
+        #self.bot.sendLog("URL check: " + url)
         proxies = {'http': 'http://174.142.104.57:3128'} # fetch from a list later
         opener = urllib.FancyURLopener(proxies)
         fp = opener.open(url)

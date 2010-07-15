@@ -18,11 +18,11 @@
 #
 ################################################################################
 
-import os, sys, copy
+import os, sys, copy, asyncore
 from conf import configHandler
-from utils import threadManager
+from utils import md
 from utils import moduleInterface
-from xmpp import producerBot
+#from xmpp import producerBot
 
 # maps module names with registered functions
 modules = {}
@@ -62,20 +62,22 @@ def execute(module, identifier):
             confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
             regmod = func(confCopy)
             if isinstance(regmod, moduleInterface.Module):
-                monitored = producerBot.ProducerBot().getMonitoredBotnets()
-                botnet = confCopy['botnet']
-                if botnet not in monitored:
-                    if not producerBot.ProducerBot().sendTrackReq(botnet):
-                        threadManager.ThreadManager().add(regmod, identifier)
-                    else:
-                        print "Botnet already monitored!"
-                else:
-                    print "You are already monitoring this!"
+	            monitored = list()
+	            #monitored = producerBot.ProducerBot().getMonitoredBotnets()
+	            botnet = confCopy['botnet']
+	            if botnet not in monitored:
+	                #if not producerBot.ProducerBot().sendTrackReq(botnet):
+	                moduleCoordinator.ModuleCoordinator().add(regmod, identifier)
+	                #else:
+	                    #print "Botnet already monitored!"
+	            else:
+	                print "You are already monitoring this!"
             else:
                 print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         else:
             return
     except Exception:
+        print sys.exc_info()
         print "[ModuleManager]:", sys.exc_info()[1]
         
 def handle_modules_onstart():

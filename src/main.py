@@ -22,8 +22,8 @@ import cmd, sys, os, signal
 import threading, time
 from conf import configHandler
 from modules import moduleManager
-from utils import threadManager
-from xmpp import producerBot
+from utils import moduleCoordinator
+#from xmpp import producerBot
 from ConfigParser import *
 
 if os.name == "nt":
@@ -54,15 +54,15 @@ class CLI(cmd.Cmd):
         self.prompt = ">> "
         self.intro = "\nType help or '?' for a list of commands\n"
         moduleManager.handle_modules_onstart()
-        threadManager.ThreadManager()
-        self.managerThread = ManagerThread()
-        self.managerThread.start()
+        moduleCoordinator.ModuleCoordinator().start()
+        self.moduleDirChange = ModuleDirChangeThread()
+        self.moduleDirChange.start()
         self.config = configHandler.ConfigHandler()
         self.modlist = []
         
-        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        self.bot = producerBot.ProducerBot(self.xmppConf)
-        self.bot.run()
+        #self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
+        #self.bot = producerBot.ProducerBot(self.xmppConf)
+        #self.bot.run()
         
     def do_exec(self, arg):
         """
@@ -81,11 +81,12 @@ class CLI(cmd.Cmd):
         Reload the XMPP configuration and restart
         the bot
         """
-         
-        self.bot.disconnect(reconnect=True)
-        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        self.bot = producerBot.ProducerBot(self.xmppConf)
-        print "Reloaded XMPP config and restarted the bot"
+        
+        pass
+        #self.bot.disconnect(reconnect=True)
+        #self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
+        #self.bot = producerBot.ProducerBot(self.xmppConf)
+        #print "Reloaded XMPP config and restarted the bot"
         
     def do_stop(self, arg):
         """
@@ -93,7 +94,7 @@ class CLI(cmd.Cmd):
         Usage: stop id
         """
         
-        threadManager.ThreadManager().stop(arg)
+        moduleCoordinator.ModuleCoordinator().stop(arg)
     
     def do_lsmod(self, arg):
         """
@@ -111,11 +112,11 @@ class CLI(cmd.Cmd):
         List all modules being executed at the moment
         """
         
-        idlist = threadManager.ThreadManager().getAll()
+        idlist = moduleCoordinator.ModuleCoordinator().getAll()
         if len(idlist) == 0:
             print "No modules running"
         else:
-            listStr = "\nThread Id\n=========\n"
+            listStr = "\nModule ID\n=========\n"
             for ident in idlist:
                 listStr += ident + "\n"
             print listStr
@@ -166,26 +167,31 @@ class CLI(cmd.Cmd):
         
         self.do_exit(arg)
         
+    def do_showlog(self, arg):
+        """
+        Show recent logs from the monitor
+        and the modules
+        """
+        
+        moduleCoordinator.ModuleCoordinator().getErrors()
+        
     def do_exit(self, arg):
         """
         Exit the program gracefully
         """
         
-        print "Wait while quitting.."
-        self.managerThread.stop()
-        self.managerThread.join()
-        threadManager.ThreadManager().stopAll()
-        self.bot.disconnect()
+        print "Shutting down.."
+        self.moduleDirChange.stop()
+        self.moduleDirChange.join()
+        moduleCoordinator.ModuleCoordinator().stopAll()
+        #self.bot.disconnect()
         sys.exit(0)
         
-class ManagerThread(threading.Thread):
+class ModuleDirChangeThread(threading.Thread):
     """
     This thread call the function 'load_modules'
     in moduleManager periodically to check for 
-    newly registered modules and modules recently
-    removed. The thread also checks the thread 
-    manager exception bucket for errors from the
-    module threads.
+    newly registered modules and modules recently removed
     """
 
     def __init__(self):
@@ -203,7 +209,6 @@ class ManagerThread(threading.Thread):
         
         while self.continueThis:
             moduleManager.load_modules()
-            threadManager.ThreadManager().getError()
             time.sleep(1)
             
     def stop(self):
