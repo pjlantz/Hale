@@ -62,16 +62,7 @@ def execute(module, identifier):
             confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
             regmod = func(confCopy)
             if isinstance(regmod, moduleInterface.Module):
-	            monitored = list()
-	            #monitored = producerBot.ProducerBot().getMonitoredBotnets()
-	            botnet = confCopy['botnet']
-	            if botnet not in monitored:
-	                #if not producerBot.ProducerBot().sendTrackReq(botnet):
-	                moduleCoordinator.ModuleCoordinator().add(regmod, identifier)
-	                #else:
-	                    #print "Botnet already monitored!"
-	            else:
-	                print "You are already monitoring this!"
+	            moduleCoordinator.ModuleCoordinator().add(regmod, identifier)
             else:
                 print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         else:

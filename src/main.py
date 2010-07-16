@@ -76,7 +76,7 @@ class CLI(cmd.Cmd):
             return
         moduleManager.execute(args[0], args[1])
         
-    def do_xmpprel(self, arg):
+    def do_xreload(self, arg):
         """
         Reload the XMPP configuration and restart
         the bot

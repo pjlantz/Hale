@@ -74,8 +74,8 @@ class Singleton(type):
         return cls.instance
         
 LOG_EVENT = 0
-START_EVENT = 2
-STOP_EVENT = 3
+START_EVENT = 1
+STOP_EVENT = 2
 
 class EventHolder(object):
     """
@@ -177,12 +177,21 @@ class ModuleCoordinator(threading.Thread):
         if moduleId in self.modules:
             print "[ModuleCoordinator]: Id already used, choose another"
             return
-        
-        self.modules[moduleId] = moduleExe
-        moduleExe.run()
-        if self.dispatcherFirstStart:
-            Dispatcher().start()
-            self.dispatcherFirstStart = False
+            
+        monitored = list()
+	    #monitored = producerBot.ProducerBot().getMonitoredBotnets()
+        botnet = moduleExe.getConfig()['botnet']
+        if botnet not in monitored:
+	        #if not producerBot.ProducerBot().sendTrackReq(botnet):
+                self.modules[moduleId] = moduleExe
+                moduleExe.run()
+                if self.dispatcherFirstStart:
+                    Dispatcher().start()
+                    self.dispatcherFirstStart = False
+   	        #else:
+                #print "Botnet already monitored!"
+        else:
+            print "You are already monitoring this!"
     
     @synchronized()
     def putError(self, exception, module=None):

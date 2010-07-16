@@ -22,7 +22,7 @@ import base64, urllib
 import moduleManager
 from utils import *
 
-from twisted.internet import reactor, protocol, task
+from twisted.internet import reactor, protocol
 from twisted.web.client import HTTPPageGetter
 
 @moduleManager.register("http")
@@ -44,19 +44,22 @@ class HTTP(moduleInterface.Module):
     
     def __init__(self, conf):
         """
-        Constructor sets up configs
+        Constructor sets up configs and task to do
+        a looping call 
         """
         
         self.config = conf
         self.cont = True
-        self.loop = task.LoopingCall(self.connect)
         
     def run(self):
         """
         Start execution
         """
         
-        self.loop.start(1) # any value, reschedule later
+        self.factory = HTTPClientFactory(self, self.config)
+        self.host = self.config['botnet']
+        self.port = int(self.config['port'])
+        self.connect()
         
     def connect(self):
         """
@@ -64,15 +67,17 @@ class HTTP(moduleInterface.Module):
         to botnet and receives instructions
         """
     
-        if self.cont:
-	        factory = HTTPClientFactory(self.config)
-	        host = self.config['botnet']
-	        port = int(self.config['port'])
-	        reactor.connectTCP(host, port, factory)
-	        self.loop.stop()
-	        self.loop.start(str(factory.getNewReconnect()), now=False)
-        else:
+        if not self.cont:
             return
+            
+        self.connector = reactor.connectTCP(self.host, self.port, self.factory) # TODO: socksify
+            
+    def startLoop(self):
+        """
+        Called by the factory to do a new reconnect
+        """
+        
+        self.connect()
             
     def stop(self):
         """
@@ -90,25 +95,40 @@ class HTTP(moduleInterface.Module):
         return self.config
         
 class HTTPProtocol(HTTPPageGetter):
+    """
+    Protocol class fetching web page
+    """
 
     def handleResponsePart(self, data):
+        """
+        Sends response to the factory
+        """
+        
         self.factory.handleResponse(data.strip())
         
 class HTTPClientFactory(protocol.ClientFactory):
+    """
+    Clientfactory taking care of the http request
+    """
 
     protocol = HTTPProtocol
 
-    def __init__(self, config):
+    def __init__(self, module, config):
+        """
+        Constructor
+        """
+        
         self.config = config
+        self.cookies = {}
         self.url = self.config['botnet']
         self.host = self.config['myhost']
         self.agent = self.config['useragent']
         self.path = self.config['path']
-        self.headers = {"Host": self.host}
         self.method = self.config['method']
         self.req = urllib.urlencode({self.config['id_grammar']: self.config['id'], 
         self.config['build_id_grammar']: self.config['build_id']})
         if self.method == 'POST':
+            self.headers = {"Host": self.host, "Content-Type": "application/x-www-form-urlencoded"}
             params = urllib.urlencode({self.config['id_grammar']: self.config['id'], 
             self.config['build_id_grammar']: self.config['build_id']})
             if self.config['use_base64encoding'] == "True":
@@ -116,6 +136,7 @@ class HTTPClientFactory(protocol.ClientFactory):
             else:
                 self.postdata = params
         if self.method == 'GET':
+            self.headers = {"Host": self.host}
             if self.config['use_base64encoding'] == "True":
                 idParameter = base64.b64encode(self.config['id'])
                 buildIdParamter = base64.b64encode(self.config['build_id'])
@@ -124,12 +145,17 @@ class HTTPClientFactory(protocol.ClientFactory):
                params = urllib.urlencode({self.config['id_grammar']: self.config['id'], 
                self.config['build_id_grammar']: self.config['build_id']}) 
             self.path = self.path + "?" + params
-        self.cookies = {}
         self.wait = 0
+        self.module = module
         
     def handleResponse(self, response):
+        """
+        Handles response by decoding it if specified to
+        do so in the config file. Logs data and extract
+        the new reconnect interval
+        """
+    
         print response
-        # decode response
         if self.config['use_base64decoding'] == "True":
             try:
                 response = base64.b64decode(response)
@@ -140,16 +166,20 @@ class HTTPClientFactory(protocol.ClientFactory):
             # extract wait grammar for new reconnect interval    
             try:
                 self.wait = int(response.split(self.config['wait_grammar'])[1].split(self.config['response_separator'])[1])
+                reactor.callLater(self.wait, self.module.startLoop)
             except IndexError:
                 # Could not split out wait grammar, maybe base64 decoding is necessary, got response:
                 return
-
-    def getNewReconnect(self):
+                
+    def __call__(self):
         """
-        Return new reconnect interval
+        Used by the socks5 module to return
+        the protocol handled by this factory
         """
         
-        return self.wait * 60
+        p = self.protocol()
+        p.factory = self
+        return p
     
     def gotStatus(self, version, status, message):
         pass

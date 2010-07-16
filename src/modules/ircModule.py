@@ -42,9 +42,7 @@ class IRC(moduleInterface.Module):
 
     def __init__(self, config):
         """
-        Constructor sets up configs, threadManager object
-        and various booleans used for network registration
-        when connecting to a IRC server
+        Constructor sets up configs and moduleCoordinator object
         """
         
         self.config = config
@@ -76,6 +74,10 @@ class IRC(moduleInterface.Module):
         return self.config
         
 class IRCProtocol(Protocol):
+    """
+    Protocol taking care of connection, incoming
+    data and outgoing
+    """
 
     factory = None
 
@@ -85,11 +87,11 @@ class IRCProtocol(Protocol):
         """
         
         if self.factory.getConfig()['password'] != 'None':
-            self.transport.write(self.factory.getConfig()['pass_grammar'] + ' ' + self.factory.getConfig()['password'] + '\r\n')
-        self.transport.write(self.factory.getConfig()['nick_grammar'] + ' ' + self.factory.getConfig()['nick'] + '\r\n')
-        self.transport.write(self.factory.getConfig()['user_grammar'] + ' ' + self.factory.getConfig()['username'] + ' ' + 
+            self.transport.write(self.factory.getConfig()['pass_grammar'] + ' ' + self.factory.getConfig()['password'] + '\r\n') # connect with pass
+        self.transport.write(self.factory.getConfig()['nick_grammar'] + ' ' + self.factory.getConfig()['nick'] + '\r\n') # send NICK grammar
+        self.transport.write(self.factory.getConfig()['user_grammar'] + ' ' + self.factory.getConfig()['username'] + ' ' +  
         self.factory.getConfig()['username'] + ' ' + self.factory.getConfig()['username'] + ' :' + 
-        self.factory.getConfig()['realname'] + '\r\n')
+        self.factory.getConfig()['realname'] + '\r\n') # sebd USER grammar
 
     def dataReceived(self, data):
         """
@@ -97,23 +99,21 @@ class IRCProtocol(Protocol):
         """
         
         if data.find(self.factory.getConfig()['ping_grammar']) != -1: # ping
-            self.transport.write(self.factory.getConfig()['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # pong
+            self.transport.write(self.factory.getConfig()['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # send pong
             if self.factory.getFirstPing():
-				if self.factory.getConfig()['channel_pass'] != 'None':
+				if self.factory.getConfig()['channel_pass'] != 'None': # joing with pass
 				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + ' ' + 
 				    self.factory.getConfig()['channel_pass'] + '\r\n')
 				else:
-				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + '\r\n')
+				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + '\r\n') # join without pass
 				self.factory.setFirstPing()
         elif data.find(self.factory.getConfig()['topic_grammar']) != -1: # topic
-           print "new topic!"
-           #pass
+           pass
         elif data.find(self.factory.getConfig()['currenttopic_grammar']) != -1: # currenttopic
 	        pass
         elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
-            print "new privmsg!"
-            #moduleCoordinator.ModuleCoordinator().addEvent(md.LOG_EVENT, "Got irc messsage!")
-            #pass
+            #moduleCoordinator.ModuleCoordinator().addEvent(md.LOG_EVENT, "Got irc messsage!") # todo with logging
+            pass
         elif data.find(self.factory.getConfig()['notice_grammar']) != -1: # notice
             pass
         elif data.find(self.factory.getConfig()['mode_grammar']) != -1: # mode
@@ -124,6 +124,9 @@ class IRCProtocol(Protocol):
         #urlHandler.URLHandler(self.factory.getConfig(), data).start() #TODO without threads
         
 class IRCClientFactory(ClientFactory):
+    """
+    Clientfactory for the IRCProtocol
+    """
 
     protocol = IRCProtocol # tell base class what proto to build
 
@@ -151,6 +154,11 @@ class IRCClientFactory(ClientFactory):
         return self.getFirstPing
         
     def __call__(self):
+        """
+        Used by the socks5 module to return
+        the protocol handled by this factory
+        """
+        
         p = self.protocol()
         p.factory = self
         return p
@@ -162,7 +170,3 @@ class IRCClientFactory(ClientFactory):
         """
         
         self.firstPing = False
-        
-    def clientConnectionFailed(self, connector, reason):
-        print 'Failed to connect to:', connector.getDestination()
-        self.poem_finished()
