@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-import sys, os
+import sys, os, hashlib
 from ConfigParser import *
 
 class Singleton(type):
@@ -57,6 +57,7 @@ class ConfigHandler(object):
         Constructor, create parser
         """
        
+        self.currentHash = ''
         self.currentConfig = ConfigParser()
         self.currentConfigFile = "conf/modules.conf"
         if os.name == "nt":
@@ -88,11 +89,12 @@ class ConfigHandler(object):
         lsStr = "\nConfig name\tFor module\n==========================\n"
         try:
             for section in self.currentConfig.sections():
-                if len(section) <= 7:
-                    tabs = "\t\t"
-                else:
-                    tabs = "\t"
-                lsStr += section + tabs + "[" + self.currentConfig.get(section, "module") + "]\n"
+                if section != 'uniqueKeys':
+                    if len(section) <= 7:
+                        tabs = "\t\t"
+                    else:
+                        tabs = "\t"
+                    lsStr += section + tabs + "[" + self.currentConfig.get(section, "module") + "]\n"
         except Exception:
             print "[ConfigHandler]:", sys.exc_info()[1]
             return
@@ -103,7 +105,7 @@ class ConfigHandler(object):
         Set config name 'section' to be used
         """
         
-        if len(section) == 0:
+        if len(section) == 0 or section == 'uniqueKeys':
             if len(self.currentSection) == 0:
                 print "[ConfigHandler]: No config loaded "
             else:
@@ -120,6 +122,20 @@ class ConfigHandler(object):
             return
         self.currentSection = section
         print "[ConfigHandler]: Using " + section
+        
+        dictStr = self.getStrFromDict(self.current)
+        md5 = hashlib.new('md5')
+        md5.update(dictStr)
+        self.currentHash = md5.hexdigest()
+        
+    def getStrFromDict(self, dict):
+        dictStr = ''
+        for key in sorted(self.current.iterkeys()):
+            dictStr += key + '=' + self.current[key] + ' '
+        return dictStr.strip()
+        
+    def getCurrentHash(self):
+        return self.currentHash
         
     def getConfig(self):
         """

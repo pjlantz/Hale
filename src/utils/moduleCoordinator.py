@@ -140,6 +140,7 @@ class ModuleCoordinator(threading.Thread):
         running
         """
        
+        self.configHashes = {}
         self.modules = {}
         self.dispatcherFirstStart = True
         self.bucket = Queue.Queue()
@@ -167,7 +168,7 @@ class ModuleCoordinator(threading.Thread):
          
          self.events.append(EventHolder(eventType, data))
     
-    def add(self, moduleExe, moduleId):
+    def add(self, moduleExe, moduleId, hash):
         """
         Add a module to the list and start it,
         this method is called both on external events
@@ -182,8 +183,9 @@ class ModuleCoordinator(threading.Thread):
         monitored = producerBot.ProducerBot().getMonitoredBotnets()
         botnet = moduleExe.getConfig()['botnet']
         if botnet not in monitored:
-            if not producerBot.ProducerBot().sendTrackReq(botnet):
+            if not producerBot.ProducerBot().sendTrackReq(hash):
                 self.modules[moduleId] = moduleExe
+                self.configHashes[moduleId] = hash
                 moduleExe.run()
                 if self.dispatcherFirstStart:
                     Dispatcher().start()
@@ -233,7 +235,8 @@ class ModuleCoordinator(threading.Thread):
         if moduleId not in self.modules.keys():
             print "No such id running"
             return
-        producerBot.ProducerBot().removeBotnet(self.modules[moduleId].getConfig()['botnet'])
+        producerBot.ProducerBot().removeBotnet(self.configHashes[moduleId])
+        self.configHashes.pop(moduleId)
         self.modules[moduleId].stop()
         self.modules.pop(moduleId)
         

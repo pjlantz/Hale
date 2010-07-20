@@ -77,7 +77,7 @@ class URLHandler(threading.Thread):
             pass
         md5 = hashlib.new('md5')
         hash = md5.update(content)
-        fname = md5.hexdigest()
+        fname = md5.hexdigest()	
         filename = "%s-%s" % (fname, extfilename)
         if not os.path.exists(filename):
             fp = open(filename, 'a+')

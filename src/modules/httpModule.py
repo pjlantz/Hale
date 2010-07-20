@@ -47,6 +47,7 @@ class HTTP(moduleInterface.Module):
         a looping call 
         """
         
+        self.hash = hash
         self.config = conf
         self.cont = True
         

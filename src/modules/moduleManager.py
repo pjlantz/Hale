@@ -47,7 +47,7 @@ def register(module):
         return func
     return registered_module
  
-def execute(module, identifier):
+def execute(module, identifier, hash):
     """ 
     Call this function to execute a module with the configurations 'config'
     """
@@ -61,7 +61,7 @@ def execute(module, identifier):
             confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
             regmod = func(confCopy)
             if isinstance(regmod, moduleInterface.Module):
-	            moduleCoordinator.ModuleCoordinator().add(regmod, identifier)
+	            moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash)
             else:
                 print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         else:

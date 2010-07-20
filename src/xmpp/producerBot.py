@@ -20,6 +20,7 @@
 
 import sleekxmpp, random, time
 from threading import Lock
+import threading, hashlib
 
 class synchronized(object):
     """
@@ -69,7 +70,7 @@ class Singleton(type):
  
         return cls.instance
 
-class ProducerBot(object):
+class ProducerBot(threading.Thread):
     """
     Producer put logs to a group room on a
     XMPP server
@@ -84,7 +85,7 @@ class ProducerBot(object):
         """
         
         self.running = False
-        self.currentId = 0
+        self.currentHash = 0
         self.monitoredBotnets = []
         self.foundTrack = False
         self.password = xmppConf.get("xmpp", "password")
@@ -99,6 +100,7 @@ class ProducerBot(object):
         self.xmpp.add_event_handler("session_start", self.handleXMPPConnected)
         self.xmpp.add_event_handler("disconnected", self.handleXMPPDisconnected)
         self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage)
+        threading.Thread.__init__(self)
         
     def disconnectBot(self, reconnect=False):
         """
@@ -106,7 +108,6 @@ class ProducerBot(object):
         """
         
         if self.running:
-            self.xmpp.sendPresence(pshow='unavailable')
             self.xmpp.disconnect(reconnect)
         
     def run(self):
@@ -129,6 +130,7 @@ class ProducerBot(object):
         """
 
         self.running = True
+        self.xmpp.sendPresence()
         muc = self.xmpp.plugin["xep_0045"]
         nick = self.jid.split('@')[0]
         muc.joinMUC(self.sharechannel, nick)
@@ -144,12 +146,10 @@ class ProducerBot(object):
         the botnet. Otherwise True if someone is monitoring.
         """
         
-        randomId = str(random.randint(1, 10000))
-        self.currentId = randomId
-        msg = 'trackReq id=' + randomId + " " + 'botnet=' + botnet
+        msg = 'trackReq ' + botnet
         self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
         time.sleep(2)
-        self.currentId = 0
+        self.currentHash = botnet
         if self.foundTrack:
             self.foundTrack = False
             return True
@@ -181,21 +181,17 @@ class ProducerBot(object):
         coordchan = self.coordchannel.split('@')[0]
         if channel.split('@')[0] == coordchan:
             body = message['body'].split(' ')
-            if body[0] == 'trackReq' and len(body) == 3:
-                if body[1].split('=')[0] == 'id' and body[2].split('=')[0] == 'botnet':
-                    idStr = body[1].split('=')[1]
-                    botnetStr = body[2].split('=')[1]
+            if len(body) == 2 and body[0] == 'trackReq':
+                botnetStr = body[1]
                 
-                if botnetStr in self.monitoredBotnets and idStr != self.currentId:
-                    msg = "trackAck id=" + idStr
+                if botnetStr in self.monitoredBotnets:
+                    msg = 'trackAck ' + botnetStr
                     self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
                     
-            if body[0] == 'trackAck' and len(body) == 2:
-                if body[1].split('=')[0] == 'id':
-                    idStr = body[1].split('=')[1]
-                    if self.currentId == idStr:
-                        self.foundTrack = True
-                 
+            if len(body) == 2 and body[0] == 'trackAck':
+                botnetStr = body[1]
+                if self.currentHash == botnetStr:
+                    self.foundTrack = True
     
     def sendLog(self, msg):
         """

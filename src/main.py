@@ -56,7 +56,7 @@ class CLI(cmd.Cmd):
         moduleManager.handle_modules_onstart()
         moduleCoordinator.ModuleCoordinator().start()
         self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        producerBot.ProducerBot(self.xmppConf).run()
+        producerBot.ProducerBot(self.xmppConf).start()
         self.moduleDirChange = ModuleDirChangeThread()
         self.moduleDirChange.start()
         self.config = configHandler.ConfigHandler()
@@ -72,7 +72,8 @@ class CLI(cmd.Cmd):
         if len(args) < 2:
             print "Usage: exec modulename identifier"
             return
-        moduleManager.execute(args[0], args[1])
+        arg3 = configHandler.ConfigHandler().getCurrentHash()
+        moduleManager.execute(args[0], args[1], arg3)
         
     def do_xreload(self, arg):
         """

@@ -23,6 +23,8 @@ import moduleManager
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientFactory
 
+from xmpp import producerBot
+
 @moduleManager.register("irc")
 def setup_module(config):
     """
@@ -44,6 +46,7 @@ class IRC(moduleInterface.Module):
         Constructor sets up configs and moduleCoordinator object
         """
         
+        self.hash = hash
         self.config = config
          
     def run(self):
