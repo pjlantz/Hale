@@ -23,7 +23,8 @@ import threading, time
 from utils import logHandler
 from twisted.internet import reactor
 from threading import Lock
-#from xmpp import producerBot
+from xmpp import producerBot
+from conf import configHandler
 
 class synchronized(object):
     """ 
@@ -178,18 +179,17 @@ class ModuleCoordinator(threading.Thread):
             print "[ModuleCoordinator]: Id already used, choose another"
             return
             
-        monitored = list()
-	    #monitored = producerBot.ProducerBot().getMonitoredBotnets()
+        monitored = producerBot.ProducerBot().getMonitoredBotnets()
         botnet = moduleExe.getConfig()['botnet']
         if botnet not in monitored:
-	        #if not producerBot.ProducerBot().sendTrackReq(botnet):
+            if not producerBot.ProducerBot().sendTrackReq(botnet):
                 self.modules[moduleId] = moduleExe
                 moduleExe.run()
                 if self.dispatcherFirstStart:
                     Dispatcher().start()
                     self.dispatcherFirstStart = False
-   	        #else:
-                #print "Botnet already monitored!"
+            else:
+                print "Botnet already monitored!"
         else:
             print "You are already monitoring this!"
     
@@ -233,7 +233,7 @@ class ModuleCoordinator(threading.Thread):
         if moduleId not in self.modules.keys():
             print "No such id running"
             return
-        #producerBot.ProducerBot().removeBotnet(self.threads[threadId].getConfig()['botnet'])
+        producerBot.ProducerBot().removeBotnet(self.modules[moduleId].getConfig()['botnet'])
         self.modules[moduleId].stop()
         self.modules.pop(moduleId)
         

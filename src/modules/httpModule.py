@@ -21,7 +21,6 @@
 import base64, urllib
 import moduleManager
 from utils import *
-
 from twisted.internet import reactor, protocol
 from twisted.web.client import HTTPPageGetter
 

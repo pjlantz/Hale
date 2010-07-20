@@ -23,7 +23,7 @@ import threading, time
 from conf import configHandler
 from modules import moduleManager
 from utils import moduleCoordinator
-#from xmpp import producerBot
+from xmpp import producerBot
 from ConfigParser import *
 
 if os.name == "nt":
@@ -55,14 +55,12 @@ class CLI(cmd.Cmd):
         self.intro = "\nType help or '?' for a list of commands\n"
         moduleManager.handle_modules_onstart()
         moduleCoordinator.ModuleCoordinator().start()
+        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
+        producerBot.ProducerBot(self.xmppConf).run()
         self.moduleDirChange = ModuleDirChangeThread()
         self.moduleDirChange.start()
         self.config = configHandler.ConfigHandler()
         self.modlist = []
-        
-        #self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        #self.bot = producerBot.ProducerBot(self.xmppConf)
-        #self.bot.run()
         
     def do_exec(self, arg):
         """
@@ -79,14 +77,13 @@ class CLI(cmd.Cmd):
     def do_xreload(self, arg):
         """
         Reload the XMPP configuration and restart
-        the bot
+        the producer bot
         """
         
-        pass
-        #self.bot.disconnect(reconnect=True)
-        #self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        #self.bot = producerBot.ProducerBot(self.xmppConf)
-        #print "Reloaded XMPP config and restarted the bot"
+        producerBot.ProducerBot().disconnectBot(reconnect=True)
+        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
+        producerBot.ProducerBot(self.xmppConf)
+        producerBot.ProducerBot().run()
         
     def do_stop(self, arg):
         """
@@ -184,7 +181,7 @@ class CLI(cmd.Cmd):
         self.moduleDirChange.stop()
         self.moduleDirChange.join()
         moduleCoordinator.ModuleCoordinator().stopAll()
-        #self.bot.disconnect()
+        producerBot.ProducerBot().disconnectBot()
         sys.exit(0)
         
 class ModuleDirChangeThread(threading.Thread):

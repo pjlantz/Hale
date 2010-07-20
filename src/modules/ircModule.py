@@ -20,7 +20,6 @@
 
 from utils import *
 import moduleManager
-
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientFactory
 
@@ -55,8 +54,9 @@ class IRC(moduleInterface.Module):
         factory = IRCClientFactory(self.config)
         host = self.config['botnet']
         port = int(self.config['port'])
-        socksify = socks5.ProxyClientCreator(reactor, factory)
-        self.connector = socksify.connectSocks5Proxy(host, port, "127.0.0.1", 1080, "HALE")
+        self.connector = reactor.connectTCP(host, port, factory)
+        #socksify = socks5.ProxyClientCreator(reactor, factory)
+        #self.connector = socksify.connectSocks5Proxy(host, port, "127.0.0.1", 1080, "HALE")
         
     def stop(self):
         """

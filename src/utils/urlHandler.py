@@ -20,7 +20,6 @@
 
 import threading, sys
 import re, urllib, hashlib, os
-from utils import threadManager
 #from xmpp import producerBot 
 
 class URLHandler(threading.Thread):

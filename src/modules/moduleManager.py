@@ -18,11 +18,10 @@
 #
 ################################################################################
 
-import os, sys, copy, asyncore
+import os, sys, copy
 from conf import configHandler
 from utils import moduleCoordinator
 from utils import moduleInterface
-#from xmpp import producerBot
 
 # maps module names with registered functions
 modules = {}

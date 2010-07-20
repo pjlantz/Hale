@@ -1,20 +1,20 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
-#   Author: Patrik Lantz  patrik@pjlantz.com
+# (c) 2010, The Honeynet Project
+# Author: Patrik Lantz patrik@pjlantz.com
 #
-#   This program is free software; you can redistribute it and/or modify
-#   it under the terms of the GNU General Public License as published by
-#   the Free Software Foundation; either version 2 of the License, or
-#   (at your option) any later version.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
 #
-#   This program is distributed in the hope that it will be useful,
-#   but WITHOUT ANY WARRANTY; without even the implied warranty of
-#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#   GNU General Public License for more details.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
 #
-#   You should have received a copy of the GNU General Public License
-#   along with this program; if not, write to the Free Software
-#   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #
 ################################################################################
 
@@ -22,11 +22,11 @@ import sleekxmpp, random, time
 from threading import Lock
 
 class synchronized(object):
-    """ 
+    """
     Class enapsulating a lock and a function
     allowing it to be used as a synchronizing
     decorator making the wrapped function
-    thread-safe 
+    thread-safe
     """
     
     def __init__(self, *args):
@@ -47,7 +47,7 @@ class synchronized(object):
 
 class Singleton(type):
     """
-    Singleton pattern used to only create one 
+    Singleton pattern used to only create one
     ProducerBot instance
     """
     
@@ -71,7 +71,7 @@ class Singleton(type):
 
 class ProducerBot(object):
     """
-    Producer put logs to a group room on a 
+    Producer put logs to a group room on a
     XMPP server
     """
     
@@ -83,6 +83,7 @@ class ProducerBot(object):
         plugins
         """
         
+        self.running = False
         self.currentId = 0
         self.monitoredBotnets = []
         self.foundTrack = False
@@ -90,28 +91,28 @@ class ProducerBot(object):
         self.server = xmppConf.get("xmpp", "server")
         self.jid = xmppConf.get("xmpp", "jid");
         self.sharechannel = xmppConf.get("xmpp", "datashare_channel") + "@conference." + self.server
-        self.sharepass = xmppConf.get("xmpp", "datashare_pass")
         self.coordchannel = xmppConf.get("xmpp", "coordination_channel") + "@conference." + self.server
-        self.coordpass = xmppConf.get("xmpp", "coordination_pass")
         
         self.port = xmppConf.get("xmpp", "port")
         self.xmpp = sleekxmpp.ClientXMPP(self.jid, self.password)
         self.xmpp.registerPlugin("xep_0045")
         self.xmpp.add_event_handler("session_start", self.handleXMPPConnected)
         self.xmpp.add_event_handler("disconnected", self.handleXMPPDisconnected)
-        self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage) 
+        self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage)
         
-    def disconnect(self, reconnect=False):
+    def disconnectBot(self, reconnect=False):
         """
         Close connection to XMPP server
         """
         
-        self.xmpp.sendPresence(pshow='unavailable')
-        self.xmpp.disconnect(reconnect)
+        if self.running:
+            self.xmpp.sendPresence(pshow='unavailable')
+            self.xmpp.disconnect(reconnect)
         
     def run(self):
         """
-        Connect to XMPP server and start thread
+        Connect to XMPP server and start xmpp
+        process
         """
 
         self.xmpp.connect((self.server, int(self.port)))
@@ -126,18 +127,19 @@ class ProducerBot(object):
         On sucessful connection join specified
         group room
         """
-        
-        self.xmpp.sendPresence()
+
+        self.running = True
         muc = self.xmpp.plugin["xep_0045"]
-        join = muc.joinMUC(self.sharechannel, self.jid.split('@')[0], password=self.sharepass)
-        join = muc.joinMUC(self.coordchannel, self.jid.split('@')[0], password=self.coordpass)
-     
-    @synchronized()   
+        nick = self.jid.split('@')[0]
+        muc.joinMUC(self.sharechannel, nick)
+        muc.joinMUC(self.coordchannel, nick)
+                    
+    @synchronized()
     def sendTrackReq(self, botnet):
         """
         Send a trackReq to let other sensors know
         that its going to monitor a specific botnet.
-        Returns False if the request does not receive a 
+        Returns False if the request does not receive a
         an ack on this request, meaning no one is monitoring
         the botnet. Otherwise True if someone is monitoring.
         """
@@ -152,11 +154,11 @@ class ProducerBot(object):
             self.foundTrack = False
             return True
         self.monitoredBotnets.append(botnet)
-        return False 
+        return False
         
     def removeBotnet(self, botnet):
         """
-        Remove a botnet from the list of 
+        Remove a botnet from the list of
         monited ones
         """
         
@@ -180,17 +182,19 @@ class ProducerBot(object):
         if channel.split('@')[0] == coordchan:
             body = message['body'].split(' ')
             if body[0] == 'trackReq' and len(body) == 3:
-                idStr = body[1].split('=')[1]
-                botnetStr = body[2].split('=')[1]
+                if body[1].split('=')[0] == 'id' and body[2].split('=')[0] == 'botnet':
+                    idStr = body[1].split('=')[1]
+                    botnetStr = body[2].split('=')[1]
                 
                 if botnetStr in self.monitoredBotnets and idStr != self.currentId:
-                    msg = "trackAnswer id=" + idStr
+                    msg = "trackAck id=" + idStr
                     self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
                     
-            if body[0] == 'trackAnswer' and len(body) == 2:
-                idStr = body[1].split('=')[1]
-                if self.currentId == idStr:
-                    self.foundTrack = True
+            if body[0] == 'trackAck' and len(body) == 2:
+                if body[1].split('=')[0] == 'id':
+                    idStr = body[1].split('=')[1]
+                    if self.currentId == idStr:
+                        self.foundTrack = True
                  
     
     def sendLog(self, msg):
@@ -199,5 +203,4 @@ class ProducerBot(object):
         """
         
         self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
-        
         
