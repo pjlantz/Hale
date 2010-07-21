@@ -1,4 +1,4 @@
-Howto add modules, the current module API work as follow:
+How to add modules, the current module API work as follow:
 
 1) Implement module, for example:
 
@@ -54,6 +54,9 @@ then automatically import it and check for errors.
 
 3) In modules.conf edit the configuration, in this case:
 
+# specify unique configs for module
+[uniqueKeys]
+irc = botnet, pass_grammar, ... etc
 # name a section, can be anything as long as its unique
 # and add module regname (in this case irc) as module option
 [myIrcConf]
@@ -62,3 +65,30 @@ nick = SpyBot
 channel = #irc
 ...
 etc.
+
+Feeder bot HOWTO:
+
+When sending a request for a botnet to track the request is made as follow
+
+trackReq hash
+
+where the hash value is made of the unique keys in the module configuration
+sorted alphabetically. If there is a sensor already monitoring this botnet
+then an answer will be made
+
+trackAck hash
+
+The feeder should wait/sleep some time to let the sensors respond to the request.
+If no such answer is made after waiting then the bot can send the command to start
+tracking a botnet, a sensor that is ready to handle it will take care of it. The
+command is issued as follow
+
+startTrack config
+
+where config is a string representation of the configuration, for example
+
+module=irc botnet=irc.freenode.net etc..
+
+To find out if any sensor has taken the job to monitor this request, issue a trackReq
+with the same hash used prior to sending the startTrack. If an acknowledgment is made
+then the request was sucessfully executed. 
