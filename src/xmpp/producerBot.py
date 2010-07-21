@@ -77,12 +77,14 @@ class StartTrack(threading.Thread):
     
         self.eventlist = list()
         self.producer = producer
+        self.nbrOfBotnets = 0
         threading.Thread.__init__(self)
         
     def run(self):
     
         while True:
-            time.sleep(10)
+            self.nbrOfBotnets = len(self.producer.getMonitoredBotnets())
+            time.sleep(self.nbrOfBotnets * 10)
             if len(self.eventlist) > 0:
                 config = self.eventlist.pop()
                 from utils import moduleCoordinator
