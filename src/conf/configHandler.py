@@ -62,6 +62,7 @@ class ConfigHandler(object):
         self.currentConfigFile = "conf/modules.conf"
         if os.name == "nt":
             self.currentConfigFile = self.currentConfigFile.replace("/", "\\")
+        self.currentConfig.read(self.currentConfigFile)
         self.currentSection = ""
         self.current = {}
         
@@ -100,41 +101,100 @@ class ConfigHandler(object):
             return
         print lsStr
             
-    def useConf(self, section):
+    def useConf(self, section, startEvent=False):
         """
         Set config name 'section' to be used
         """
         
-        if len(section) == 0 or section == 'uniqueKeys':
-            if len(self.currentSection) == 0:
-                print "[ConfigHandler]: No config loaded "
-            else:
-                print "[ConfigHandler]: Using " + self.currentSection
-            return
+        if not startEvent:
+            if len(section) == 0 or section == 'uniqueKeys':
+                if len(self.currentSection) == 0:
+                    print "[ConfigHandler]: No config loaded "
+                else:
+                    print "[ConfigHandler]: Using " + self.currentSection
+                return
         
-        self.currentConfig = ConfigParser()
-        self.currentConfig.read(self.currentConfigFile)
+            self.currentConfig = ConfigParser()
+            self.currentConfig.read(self.currentConfigFile)
+            try:
+                for option in self.currentConfig.options(section):
+                    self.current[option] = self.currentConfig.get(section, option)
+            except NoSectionError:
+                print "[ConfigHandler]: No such config " + section
+                return
+        else:
+            self.current = section
+        
         try:
-            for option in self.currentConfig.options(section):
-                self.current[option] = self.currentConfig.get(section, option)
+            dict = self.current
+            dictStr = self.getStrFromDict(dict)
+            md5 = hashlib.new('md5')
+            md5.update(dictStr)
+            self.currentHash = md5.hexdigest()
         except NoSectionError:
-            print "[ConfigHandler]: No such config " + section
+            print '[ConfigHandler]: uniqueKeys section missing'
             return
-        self.currentSection = section
-        print "[ConfigHandler]: Using " + section
-        
-        dictStr = self.getStrFromDict(self.current)
-        md5 = hashlib.new('md5')
-        md5.update(dictStr)
-        self.currentHash = md5.hexdigest()
+        if not startEvent:
+            self.currentSection = section
+            print "[ConfigHandler]: Using " + section
         
     def getStrFromDict(self, dict):
+        """
+        Returns a string from a dictionary with
+        only unique keys
+        """
+    
         dictStr = ''
-        for key in sorted(self.current.iterkeys()):
+        unique = self.getUniqueKeys(dict['module'])
+        for key in sorted(unique.iterkeys()):
             dictStr += key + '=' + self.current[key] + ' '
         return dictStr.strip()
+
         
+    def getDictFromStr(self, string):
+        """
+        Returns a dictionary with configs
+        from a string
+        """
+    
+        dict = {}
+        previousKey = ''
+        stringList = string.strip().split(' ')
+        for config in stringList:
+            key = config.split('=')[0]
+            try:
+                value = config.split('=')[1]
+            except IndexError:
+                newValue = dict[previousKey]
+                newValue = newValue + ' ' + key
+                dict[previousKey] = newValue
+                continue
+            previousKey = key
+            dict[key] = value
+        return dict
+        
+    def getUniqueKeys(self, module):
+        """
+        Fetches only unique keys specified in the config
+        from a module named 'module'
+        """
+    
+        uniqueDict = {}
+        uniques = self.__striplist(self.currentConfig.get('uniqueKeys', module).split(','))
+        for unique in uniques:
+            if '*' in unique:
+                unique = unique.split('*')[1].strip()
+            for (key, value) in self.current.items():
+                if unique in key:
+                    uniqueDict[key] = value
+                    
+        return uniqueDict
+            
     def getCurrentHash(self):
+        """
+        Returns hash for current config used
+        """
+        
         return self.currentHash
         
     def getConfig(self):
@@ -163,4 +223,11 @@ class ConfigHandler(object):
                             print "[ConfigHandler]: Current config not for use with " + module
                             return False
         return True
+        
+    def __striplist(self, l):
+        """
+        Strip whitespaces from elements in a list
+        """
+        
+        return([x.strip() for x in l])
                     

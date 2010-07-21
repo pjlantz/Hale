@@ -21,6 +21,7 @@
 import sleekxmpp, random, time
 from threading import Lock
 import threading, hashlib
+from conf import configHandler
 
 class synchronized(object):
     """
@@ -70,6 +71,28 @@ class Singleton(type):
  
         return cls.instance
 
+class StartTrack(threading.Thread):
+
+    def __init__(self, producer):
+    
+        self.eventlist = list()
+        self.producer = producer
+        threading.Thread.__init__(self)
+        
+    def run(self):
+    
+        while True:
+            time.sleep(10)
+            if len(self.eventlist) > 0:
+                config = self.eventlist.pop()
+                from utils import moduleCoordinator
+                eventType = moduleCoordinator.START_EVENT
+                moduleCoordinator.ModuleCoordinator().addEvent(eventType, config)
+            
+    def addMessage(self, data):
+    
+        self.eventlist.append(data)
+       
 class ProducerBot(threading.Thread):
     """
     Producer put logs to a group room on a
@@ -88,6 +111,7 @@ class ProducerBot(threading.Thread):
         self.currentHash = 0
         self.monitoredBotnets = []
         self.foundTrack = False
+        self.startTrackThread = StartTrack(self)
         self.password = xmppConf.get("xmpp", "password")
         self.server = xmppConf.get("xmpp", "server")
         self.jid = xmppConf.get("xmpp", "jid");
@@ -120,6 +144,9 @@ class ProducerBot(threading.Thread):
         self.xmpp.process()
         
     def handleXMPPDisconnected(self, event):
+        """
+        Handle disconnected state
+        """
     
         print ""
 
@@ -129,6 +156,7 @@ class ProducerBot(threading.Thread):
         group room
         """
 
+        self.startTrackThread.start()
         self.running = True
         self.xmpp.sendPresence()
         muc = self.xmpp.plugin["xep_0045"]
@@ -192,6 +220,10 @@ class ProducerBot(threading.Thread):
                 botnetStr = body[1]
                 if self.currentHash == botnetStr:
                     self.foundTrack = True
+            
+            if body[0] == 'startTrack':
+                config = ' '.join(body).split('startTrack')[1]
+                self.startTrackThread.addMessage(config)
     
     def sendLog(self, msg):
         """

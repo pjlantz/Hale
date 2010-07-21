@@ -24,7 +24,7 @@ from utils import logHandler
 from twisted.internet import reactor
 from threading import Lock
 from xmpp import producerBot
-from conf import configHandler
+from conf import configHandler	
 
 class synchronized(object):
     """ 
@@ -160,6 +160,12 @@ class ModuleCoordinator(threading.Thread):
                 if ev.getType() == LOG_EVENT:
                     logHandler.LogHandler().handleLog(ev.getData())
                     print "From eventMonitor: " + ev.getData()
+                if ev.getType() == START_EVENT:
+                    config = configHandler.ConfigHandler().getDictFromStr(ev.getData())
+                    configHandler.ConfigHandler().useConf(config, True)
+                    hash = configHandler.ConfigHandler().getCurrentHash()
+                    from modules import moduleManager
+                    moduleManager.execute(config['module'], config['module'] + str(len(self.modules)), hash)
                 
     def addEvent(self, eventType, data):
          """
@@ -172,8 +178,7 @@ class ModuleCoordinator(threading.Thread):
         """
         Add a module to the list and start it,
         this method is called both on external events
-        and from CLI interaction, the difference is that
-        from CLI interaction this method is called directly
+        and from CLI interaction
         """
         
         if moduleId in self.modules:
