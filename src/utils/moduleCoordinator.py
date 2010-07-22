@@ -172,6 +172,8 @@ class ModuleCoordinator(threading.Thread):
                 if ev.getType() == START_EVENT:
                     from modules import moduleManager
                     moduleManager.executeExternal(ev.getData()['module'], 'external_' + str(len(self.modules) + 1), ev.getData(), ev.getHash())
+                if ev.getType() == STOP_EVENT:
+                    pass
                 
     def addEvent(self, eventType, data, hash=''):
          """
@@ -194,10 +196,12 @@ class ModuleCoordinator(threading.Thread):
         monitored = producerBot.ProducerBot().getMonitoredBotnets()
         botnet = moduleExe.getConfig()['botnet']
         if not external:
-            if botnet in monitored:
+            if hash in monitored:
                 print "You are already monitoring this!"
+                return
             if producerBot.ProducerBot().sendTrackReq(hash):
                 print "Botnet already monitored!"
+                return
                 
         self.modules[moduleId] = moduleExe
         self.configHashes[moduleId] = hash

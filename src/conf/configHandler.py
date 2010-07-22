@@ -126,7 +126,7 @@ class ConfigHandler(object):
             dict = self.current
             dictStr = self.getStrFromDict(dict)
             md5 = hashlib.new('md5')
-            md5.update(dictStr)
+            md5.update(dictStr.strip())
             self.currentHash = md5.hexdigest()
         except NoSectionError:
             print '[ConfigHandler]: uniqueKeys section missing'
@@ -144,9 +144,9 @@ class ConfigHandler(object):
         moduleError = self.__checkModule(dict)
         if moduleError:
             return '', moduleError
-        dictStr = self.getStrFromDict(dict)
+        dictStr = self.getStrFromDict(dict, True)
         md5 = hashlib.new('md5')
-        md5.update(dictStr)
+        md5.update(dictStr.strip())
         return md5.hexdigest(), moduleError
         
     def __checkModule(self, conf):
@@ -161,16 +161,19 @@ class ConfigHandler(object):
             return False
         return True
         
-    def getStrFromDict(self, dict):
+    def getStrFromDict(self, dict, external=False):
         """
         Returns a string from a dictionary with
         only unique keys
         """
     
         dictStr = ''
-        unique = self.getUniqueKeys(dict['module'])
+        items = None
+        if external:
+            items = dict.items()
+        unique = self.getUniqueKeys(dict['module'].strip(), items)
         for key in sorted(unique.iterkeys()):
-            dictStr += key + '=' + self.current[key] + ' '
+            dictStr += key + '=' + dict[key] + ' '
         return dictStr.strip()
 
         
@@ -188,15 +191,15 @@ class ConfigHandler(object):
             try:
                 value = config.split('=')[1]
             except IndexError:
-                newValue = dict[previousKey]
-                newValue = newValue + ' ' + key
+                newValue = dict[previousKey].strip()
+                newValue = newValue + ' ' + key.strip()
                 dict[previousKey] = newValue
                 continue
             previousKey = key
-            dict[key] = value
+            dict[key] = value.strip()
         return dict
         
-    def getUniqueKeys(self, module):
+    def getUniqueKeys(self, module, current=None):
         """
         Fetches only unique keys specified in the config
         from a module named 'module'
@@ -204,10 +207,13 @@ class ConfigHandler(object):
     
         uniqueDict = {}
         uniques = self.__striplist(self.currentConfig.get('uniqueKeys', module).split(','))
+        items = self.current.items()
         for unique in uniques:
             if '*' in unique:
                 unique = unique.split('*')[1].strip()
-            for (key, value) in self.current.items():
+            if current != None:
+                items = current
+            for (key, value) in items:
                 if unique in key:
                     uniqueDict[key] = value
                     

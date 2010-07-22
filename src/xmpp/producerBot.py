@@ -192,21 +192,20 @@ class ProducerBot(threading.Thread):
 	        coordchan = self.coordchannel.split('@')[0]
 	        if channel.split('@')[0] == coordchan:
 	            body = message['body'].split(' ')
-	            if len(body) == 2 and body[0] == 'trackReq':
+	            if len(body) == 2 and body[0].strip() == 'trackReq':
 	                botnetStr = body[1]
 	                
 	                if botnetStr in self.monitoredBotnets:
 	                    msg = 'trackAck ' + botnetStr
 	                    self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
 	                    
-	            if len(body) == 2 and body[0] == 'trackAck':
+	            if len(body) == 2 and body[0].strip() == 'trackAck':
 	                botnetStr = body[1].strip()
 	                if botnetStr == self.currentHash:
 	                    self.foundTrack = True
-	            
-	            if body[0] == 'sensorLoadReq':
+	            if body[0].strip() == 'sensorLoadReq':
 	                msg = 'sensorLoadAck id=' + self.id + ' queue=' + str(len(self.monitoredBotnets))
-	                self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
+                    self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
                 
     def handleIncomingMessage(self, msg):
         """
@@ -218,17 +217,17 @@ class ProducerBot(threading.Thread):
             toStr = msg['from']
             if body[0].strip() == 'startTrackReq':
                 self.recvStartReq = True
-                config = ' '.join(body).split('startTrackReq')[1]
+                config = msg['body'].split('startTrackReq')[1]
                 hash, moduleError = configHandler.ConfigHandler().getHashFromConfStr(config)
                 if moduleError:
-                    self.xmpp.sendMessage(toStr, 'moduleNotSupported', None, "chat")
+                    self.xmpp.sendMessage(toStr, 'startTrackNack', None, "chat")
                     return
                 if hash not in self.monitoredBotnets and not self.sendTrackReq(hash):
-                    self.xmpp.sendMessage(toStr, 'startTrackAck', None, "chat")
                     from utils import moduleCoordinator
                     eventType = moduleCoordinator.START_EVENT
-                    config = configHandler.ConfigHandler().getDictFromStr(config)
-                    moduleCoordinator.ModuleCoordinator().addEvent(eventType, config, hash)
+                    configDict = configHandler.ConfigHandler().getDictFromStr(config)
+                    moduleCoordinator.ModuleCoordinator().addEvent(eventType, configDict, hash)
+                    self.xmpp.sendMessage(toStr, 'startTrackAck', None, "chat")
                 else:
                     self.xmpp.sendMessage(toStr, 'startTrackNack', None, "chat")
     
