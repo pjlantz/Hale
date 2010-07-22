@@ -101,30 +101,27 @@ class ConfigHandler(object):
             return
         print lsStr
             
-    def useConf(self, section, startEvent=False):
+    def useConf(self, section):
         """
         Set config name 'section' to be used
         """
         
-        if not startEvent:
-            if len(section) == 0 or section == 'uniqueKeys':
-                if len(self.currentSection) == 0:
-                    print "[ConfigHandler]: No config loaded "
-                else:
-                    print "[ConfigHandler]: Using " + self.currentSection
-                return
-        
-            self.currentConfig = ConfigParser()
-            self.currentConfig.read(self.currentConfigFile)
-            try:
-                for option in self.currentConfig.options(section):
-                    self.current[option] = self.currentConfig.get(section, option)
-            except NoSectionError:
-                print "[ConfigHandler]: No such config " + section
-                return
-        else:
-            self.current = section
-        
+        if len(section) == 0 or section == 'uniqueKeys':
+            if len(self.currentSection) == 0:
+                print "[ConfigHandler]: No config loaded "
+            else:
+                print "[ConfigHandler]: Using " + self.currentSection
+            return
+    
+        self.currentConfig = ConfigParser()
+        self.currentConfig.read(self.currentConfigFile)
+        try:
+            for option in self.currentConfig.options(section):
+                self.current[option] = self.currentConfig.get(section, option)
+        except NoSectionError:
+            print "[ConfigHandler]: No such config " + section
+            return
+    
         try:
             dict = self.current
             dictStr = self.getStrFromDict(dict)
@@ -134,9 +131,35 @@ class ConfigHandler(object):
         except NoSectionError:
             print '[ConfigHandler]: uniqueKeys section missing'
             return
-        if not startEvent:
-            self.currentSection = section
-            print "[ConfigHandler]: Using " + section
+        self.currentSection = section
+        print "[ConfigHandler]: Using " + section
+            
+    def getHashFromConfStr(self, confStr):
+        """
+        Get the hash value of the config,
+        used by the producer bot
+        """
+        
+        dict = self.getDictFromStr(confStr)
+        moduleError = self.__checkModule(dict)
+        if moduleError:
+            return '', moduleError
+        dictStr = self.getStrFromDict(dict)
+        md5 = hashlib.new('md5')
+        md5.update(dictStr)
+        return md5.hexdigest(), moduleError
+        
+    def __checkModule(self, conf):
+        """
+        Check if module is supported, used
+        on external event
+        """
+        
+        module = conf['module']
+        from modules import moduleManager
+        if module in moduleManager.get_modules():
+            return False
+        return True
         
     def getStrFromDict(self, dict):
         """

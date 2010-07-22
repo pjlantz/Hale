@@ -18,6 +18,7 @@
 #
 ################################################################################
 
+import urllib2, hashlib
 import sleekxmpp, random, time
 from threading import Lock
 import threading, hashlib
@@ -70,30 +71,6 @@ class Singleton(type):
             cls.instance = super(Singleton, cls).__call__(*args, **kw)
  
         return cls.instance
-
-class StartTrack(threading.Thread):
-
-    def __init__(self, producer):
-    
-        self.eventlist = list()
-        self.producer = producer
-        self.nbrOfBotnets = 0
-        threading.Thread.__init__(self)
-        
-    def run(self):
-    
-        while True:
-            self.nbrOfBotnets = len(self.producer.getMonitoredBotnets())
-            time.sleep(self.nbrOfBotnets * 10)
-            if len(self.eventlist) > 0:
-                config = self.eventlist.pop()
-                from utils import moduleCoordinator
-                eventType = moduleCoordinator.START_EVENT
-                moduleCoordinator.ModuleCoordinator().addEvent(eventType, config)
-            
-    def addMessage(self, data):
-    
-        self.eventlist.append(data)
        
 class ProducerBot(threading.Thread):
     """
@@ -113,7 +90,6 @@ class ProducerBot(threading.Thread):
         self.currentHash = 0
         self.monitoredBotnets = []
         self.foundTrack = False
-        self.startTrackThread = StartTrack(self)
         self.password = xmppConf.get("xmpp", "password")
         self.server = xmppConf.get("xmpp", "server")
         self.jid = xmppConf.get("xmpp", "jid");
@@ -126,6 +102,11 @@ class ProducerBot(threading.Thread):
         self.xmpp.add_event_handler("session_start", self.handleXMPPConnected)
         self.xmpp.add_event_handler("disconnected", self.handleXMPPDisconnected)
         self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage)
+        self.xmpp.add_event_handler("message", self.handleIncomingMessage)
+        ip = urllib2.urlopen('http://whatismyip.org').read().strip()
+        md5 = hashlib.new('md5')
+        md5.update(ip)
+        self.id = md5.hexdigest()
         threading.Thread.__init__(self)
         
     def disconnectBot(self, reconnect=False):
@@ -158,7 +139,6 @@ class ProducerBot(threading.Thread):
         group room
         """
 
-        self.startTrackThread.start()
         self.running = True
         self.xmpp.sendPresence()
         muc = self.xmpp.plugin["xep_0045"]
@@ -208,24 +188,49 @@ class ProducerBot(threading.Thread):
         """
         
         channel = str(message['from'])
-        coordchan = self.coordchannel.split('@')[0]
-        if channel.split('@')[0] == coordchan:
-            body = message['body'].split(' ')
-            if len(body) == 2 and body[0] == 'trackReq':
-                botnetStr = body[1]
+        if channel.split('/')[1] != self.jid.split('@')[0]:
+	        coordchan = self.coordchannel.split('@')[0]
+	        if channel.split('@')[0] == coordchan:
+	            body = message['body'].split(' ')
+	            if len(body) == 2 and body[0] == 'trackReq':
+	                botnetStr = body[1]
+	                
+	                if botnetStr in self.monitoredBotnets:
+	                    msg = 'trackAck ' + botnetStr
+	                    self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
+	                    
+	            if len(body) == 2 and body[0] == 'trackAck':
+	                botnetStr = body[1].strip()
+	                if botnetStr == self.currentHash:
+	                    self.foundTrack = True
+	            
+	            if body[0] == 'sensorLoadReq':
+	                msg = 'sensorLoadAck id=' + self.id + ' queue=' + str(len(self.monitoredBotnets))
+	                self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
                 
-                if botnetStr in self.monitoredBotnets:
-                    msg = 'trackAck ' + botnetStr
-                    self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
-                    
-            if len(body) == 2 and body[0] == 'trackAck':
-                botnetStr = body[1]
-                if self.currentHash == botnetStr:
-                    self.foundTrack = True
-            
-            if body[0] == 'startTrack':
-                config = ' '.join(body).split('startTrack')[1]
-                self.startTrackThread.addMessage(config)
+    def handleIncomingMessage(self, msg):
+        """
+        Takes care of incoming private chat messages
+        """
+        
+        if msg['type'] == 'chat':
+            body = msg['body'].split(' ')
+            toStr = msg['from']
+            if body[0].strip() == 'startTrackReq':
+                self.recvStartReq = True
+                config = ' '.join(body).split('startTrackReq')[1]
+                hash, moduleError = configHandler.ConfigHandler().getHashFromConfStr(config)
+                if moduleError:
+                    self.xmpp.sendMessage(toStr, 'moduleNotSupported', None, "chat")
+                    return
+                if hash not in self.monitoredBotnets and not self.sendTrackReq(hash):
+                    self.xmpp.sendMessage(toStr, 'startTrackAck', None, "chat")
+                    from utils import moduleCoordinator
+                    eventType = moduleCoordinator.START_EVENT
+                    config = configHandler.ConfigHandler().getDictFromStr(config)
+                    moduleCoordinator.ModuleCoordinator().addEvent(eventType, config, hash)
+                else:
+                    self.xmpp.sendMessage(toStr, 'startTrackNack', None, "chat")
     
     def sendLog(self, msg):
         """

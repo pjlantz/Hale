@@ -70,6 +70,15 @@ def execute(module, identifier, hash):
         print sys.exc_info()
         print "[ModuleManager]:", sys.exc_info()[1]
         
+def executeExternal(module, identifier, config, hash):
+    """
+    Call this function when a feeder issues a tracking request
+    """
+    
+    func = modules[module]
+    regmod = func(config)
+    moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash, True)
+        
 def handle_modules_onstart():
     """
     Remove old pyc files for the modules on start

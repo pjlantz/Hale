@@ -83,13 +83,14 @@ class EventHolder(object):
     Holds an event
     """
     
-    def __init__(self, eventType, data):
+    def __init__(self, eventType, data, hash=''):
         """
         Constructor
         """
         
         self.eventType = eventType
         self.data = data
+        self.hash = hash
         
     def getType(self):
         """
@@ -104,6 +105,14 @@ class EventHolder(object):
         """
         
         return self.data
+        
+    def getHash(self):
+        """
+        Returns hash of config if event
+        is a START_EVENT
+        """
+        
+        return self.hash
         
 class Dispatcher(threading.Thread):
     """
@@ -161,20 +170,17 @@ class ModuleCoordinator(threading.Thread):
                     logHandler.LogHandler().handleLog(ev.getData())
                     print "From eventMonitor: " + ev.getData()
                 if ev.getType() == START_EVENT:
-                    config = configHandler.ConfigHandler().getDictFromStr(ev.getData())
-                    configHandler.ConfigHandler().useConf(config, True)
-                    hash = configHandler.ConfigHandler().getCurrentHash()
                     from modules import moduleManager
-                    moduleManager.execute(config['module'], config['module'] + str(len(self.modules)), hash)
+                    moduleManager.executeExternal(ev.getData()['module'], 'external_' + str(len(self.modules) + 1), ev.getData(), ev.getHash())
                 
-    def addEvent(self, eventType, data):
+    def addEvent(self, eventType, data, hash=''):
          """
          Add an event to the list
          """
          
-         self.events.append(EventHolder(eventType, data))
+         self.events.append(EventHolder(eventType, data, hash))
     
-    def add(self, moduleExe, moduleId, hash):
+    def add(self, moduleExe, moduleId, hash, external=False):
         """
         Add a module to the list and start it,
         this method is called both on external events
@@ -187,19 +193,19 @@ class ModuleCoordinator(threading.Thread):
             
         monitored = producerBot.ProducerBot().getMonitoredBotnets()
         botnet = moduleExe.getConfig()['botnet']
-        if botnet not in monitored:
-            if not producerBot.ProducerBot().sendTrackReq(hash):
-                self.modules[moduleId] = moduleExe
-                self.configHashes[moduleId] = hash
-                moduleExe.run()
-                if self.dispatcherFirstStart:
-                    Dispatcher().start()
-                    self.dispatcherFirstStart = False
-            else:
+        if not external:
+            if botnet in monitored:
+                print "You are already monitoring this!"
+            if producerBot.ProducerBot().sendTrackReq(hash):
                 print "Botnet already monitored!"
-        else:
-            print "You are already monitoring this!"
-    
+                
+        self.modules[moduleId] = moduleExe
+        self.configHashes[moduleId] = hash
+        moduleExe.run()
+        if self.dispatcherFirstStart:
+            Dispatcher().start()
+            self.dispatcherFirstStart = False                
+                
     @synchronized()
     def putError(self, exception, module=None):
         """
