@@ -69,26 +69,28 @@ etc.
 Feeder bot HOWTO:
 
 When sending a request for a botnet to track the request is made as follow
+to the groupchat room for coordination
 
-trackReq hash
+sensorLoadReq
 
-where the hash value is made of the unique keys in the module configuration
-sorted alphabetically. If there is a sensor already monitoring this botnet
-then an answer will be made
+where all sensors reply with their id and queue length (number of monitored botnets)
 
-trackAck hash
+sensorLoadAck id=353f6650859547ed06597dbfa1dcfd88 queue=0
 
-The feeder should wait/sleep some time to let the sensors respond to the request.
-If no such answer is made after waiting then the bot can send the command to start
-tracking a botnet, a sensor that is ready to handle it will take care of it. The
-command is issued as follow
+The feeder then choose one sensor based on this info like lowest queue length
+and if these are equal for several sensors, then the sensor id sorted alphabetically
+with lowest value is chosen.
 
-startTrack config
+When the feeder has chosen a sensor it sends a private chat message to the sensor
+
+startTrackReq config
 
 where config is a string representation of the configuration, for example
 
 module=irc botnet=irc.freenode.net etc..
 
-To find out if any sensor has taken the job to monitor this request, issue a trackReq
-with the same hash used prior to sending the startTrack. If an acknowledgment is made
-then the request was sucessfully executed. 
+The sensor then replies with a startTrackAck if no one else is monitoring this
+botnet, otherwise a startTrackNack is issued. If the module is not supported on
+the sensor then an error message is sent back to the feeder
+
+moduleNotSupported 
