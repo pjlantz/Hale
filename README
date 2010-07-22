@@ -55,8 +55,11 @@ then automatically import it and check for errors.
 3) In modules.conf edit the configuration, in this case:
 
 # specify unique configs for module
+# a * means that all strings equal to the one after the start
+# in this example all pass_grammar, mode_grammar etc should be 
+# treated as unique keys
 [uniqueKeys]
-irc = botnet, pass_grammar, ... etc
+irc = botnet, *grammar, ... etc
 # name a section, can be anything as long as its unique
 # and add module regname (in this case irc) as module option
 [myIrcConf]
@@ -69,7 +72,7 @@ etc.
 Feeder bot HOWTO:
 
 When sending a request for a botnet to track the request is made as follow
-to the groupchat room for coordination
+to the groupchat coordination room 
 
 sensorLoadReq
 
@@ -89,8 +92,8 @@ where config is a string representation of the configuration, for example
 
 module=irc botnet=irc.freenode.net etc..
 
-The sensor then replies with a startTrackAck if no one else is monitoring this
-botnet, otherwise a startTrackNack is issued. If the module is not supported on
-the sensor then an error message is sent back to the feeder
+The sensor then replies with a 
 
-moduleNotSupported 
+startTrackAck
+if no one else is monitoring this botnet, otherwise a startTrackNack is received if the 
+botnet is already monitored or the sensor does not have the module installed for this botnet 
