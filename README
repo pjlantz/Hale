@@ -95,5 +95,6 @@ module=irc botnet=irc.freenode.net etc..
 The sensor then replies with a 
 
 startTrackAck
+
 if no one else is monitoring this botnet, otherwise a startTrackNack is received if the 
 botnet is already monitored or the sensor does not have the module installed for this botnet 

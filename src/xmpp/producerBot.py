@@ -103,10 +103,16 @@ class ProducerBot(threading.Thread):
         self.xmpp.add_event_handler("disconnected", self.handleXMPPDisconnected)
         self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage)
         self.xmpp.add_event_handler("message", self.handleIncomingMessage)
-        ip = urllib2.urlopen('http://whatismyip.org').read().strip()
+        
+        identifier = ''
+        try:
+            identifier = urllib2.urlopen('http://whatismyip.org').read().strip() + str(random.randint(1, 10000))
+        except Exception:
+            identifier = str(random.randint(1, 10000))
         md5 = hashlib.new('md5')
-        md5.update(ip)
+        md5.update(identifier)
         self.id = md5.hexdigest()
+        
         threading.Thread.__init__(self)
         
     def disconnectBot(self, reconnect=False):
