@@ -53,29 +53,39 @@ class Botnet(models.Model):
     Keeps botnet details
     """
     
-    hash = models.CharField(max_length=32)
-    module = models.ForeignKey('Module')
+    # hash value of the unique keys from the config
+    hash = models.CharField(max_length=32, unique=True)
+    #module = models.ForeignKey('Module')
+    # irc, http etc.
+    botnettype = models.CharField(max_length=32)
     host = models.CharField(max_length=100)
-    longitude = models.FloatField()
-    latitude = models.FloatField()
+    # configuration used
+    config = models.TextField()
+    firstseen = models.DateTimeField(auto_now_add=True)
+    lastseen = models.DateTimeField(auto_now=True)
+    #longitude = models.FloatField()
+    #latitude = models.FloatField()
 
 class Module(models.Model):
     """
     Keeps the module source and config examples
     """
     
-    modulename = models.CharField(max_length=32)
+    modulename = models.CharField(max_length=32, unique=True)
     filename = models.CharField(max_length=32)
-    module = models.FileField(upload_to='downloads')
+    module = models.FileField(upload_to='modules')
+    # configuration example for this module
     confexample = models.TextField()
 
 class File(models.Model):
     """
-    Holds the analysis URL for the sandbox submitted to
+    Holds the file and analysis URL for the sandbox 
+    submitted to together with details about the file
     """
     
     analysisurl = models.URLField()
     botnet = models.ForeignKey('Botnet')
-    hash = models.CharField(max_length=32)
+    hash = models.CharField(max_length=32, unique=True)
     filename = models.CharField(max_length=100)
+    file = models.FileField(upload_to='files')
     

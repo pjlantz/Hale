@@ -72,7 +72,7 @@ class Singleton(type):
  
         return cls.instance
        
-class ProducerBot(threading.Thread):
+class ProducerBot(object):
     """
     Producer put logs to a group room on a
     XMPP server
@@ -80,12 +80,12 @@ class ProducerBot(threading.Thread):
     
     __metaclass__ = Singleton
     
-    def __init__(self, xmppConf):
+    def __init__(self, xmppConf=None):
         """
         Constructor, set up event handlers and register
         plugins
         """
-        
+
         self.running = False
         self.currentHash = 0
         self.monitoredBotnets = []
@@ -112,8 +112,6 @@ class ProducerBot(threading.Thread):
         md5 = hashlib.new('md5')
         md5.update(identifier)
         self.id = md5.hexdigest()
-        
-        threading.Thread.__init__(self)
         
     def disconnectBot(self, reconnect=False):
         """
@@ -242,5 +240,6 @@ class ProducerBot(threading.Thread):
         Send logs to the data sharing channel
         """
         
+        print msg
         self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
         

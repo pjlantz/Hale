@@ -29,19 +29,20 @@ class Migration(SchemaMigration):
 
         # Adding model 'Botnet'
         db.create_table('hale_botnet', (
-            ('hash', self.gf('django.db.models.fields.CharField')(max_length=32)),
-            ('module', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['hale.Module'])),
+            ('botnettype', self.gf('django.db.models.fields.CharField')(max_length=32)),
+            ('hash', self.gf('django.db.models.fields.CharField')(unique=True, max_length=32)),
             ('host', self.gf('django.db.models.fields.CharField')(max_length=100)),
-            ('longitude', self.gf('django.db.models.fields.FloatField')()),
-            ('latitude', self.gf('django.db.models.fields.FloatField')()),
+            ('lastseen', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
+            ('config', self.gf('django.db.models.fields.TextField')()),
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('firstseen', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
         ))
         db.send_create_signal('hale', ['Botnet'])
 
         # Adding model 'Module'
         db.create_table('hale_module', (
             ('confexample', self.gf('django.db.models.fields.TextField')()),
-            ('modulename', self.gf('django.db.models.fields.CharField')(max_length=32)),
+            ('modulename', self.gf('django.db.models.fields.CharField')(unique=True, max_length=32)),
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('module', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
             ('filename', self.gf('django.db.models.fields.CharField')(max_length=32)),
@@ -50,11 +51,12 @@ class Migration(SchemaMigration):
 
         # Adding model 'File'
         db.create_table('hale_file', (
-            ('analysisurl', self.gf('django.db.models.fields.URLField')(max_length=200)),
-            ('hash', self.gf('django.db.models.fields.CharField')(max_length=32)),
-            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('hash', self.gf('django.db.models.fields.CharField')(unique=True, max_length=32)),
             ('botnet', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['hale.Botnet'])),
             ('filename', self.gf('django.db.models.fields.CharField')(max_length=100)),
+            ('analysisurl', self.gf('django.db.models.fields.URLField')(max_length=200)),
+            ('file', self.gf('django.db.models.fields.files.FileField')(max_length=100)),
+            ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
         ))
         db.send_create_signal('hale', ['File'])
     
@@ -80,19 +82,21 @@ class Migration(SchemaMigration):
     models = {
         'hale.botnet': {
             'Meta': {'object_name': 'Botnet'},
-            'hash': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
+            'botnettype': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
+            'config': ('django.db.models.fields.TextField', [], {}),
+            'firstseen': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'hash': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '32'}),
             'host': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'latitude': ('django.db.models.fields.FloatField', [], {}),
-            'longitude': ('django.db.models.fields.FloatField', [], {}),
-            'module': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['hale.Module']"})
+            'lastseen': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
         },
         'hale.file': {
             'Meta': {'object_name': 'File'},
             'analysisurl': ('django.db.models.fields.URLField', [], {'max_length': '200'}),
             'botnet': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['hale.Botnet']"}),
+            'file': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
             'filename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'hash': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
+            'hash': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '32'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'})
         },
         'hale.log': {
@@ -108,7 +112,7 @@ class Migration(SchemaMigration):
             'filename': ('django.db.models.fields.CharField', [], {'max_length': '32'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'module': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
-            'modulename': ('django.db.models.fields.CharField', [], {'max_length': '32'})
+            'modulename': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '32'})
         },
         'hale.proxy': {
             'Meta': {'object_name': 'Proxy'},

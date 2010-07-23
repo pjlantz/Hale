@@ -56,7 +56,7 @@ class CLI(cmd.Cmd):
         moduleManager.handle_modules_onstart()
         moduleCoordinator.ModuleCoordinator().start()
         self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        producerBot.ProducerBot(self.xmppConf).start()
+        producerBot.ProducerBot(self.xmppConf).run()
         self.moduleDirChange = ModuleDirChangeThread()
         self.moduleDirChange.start()
         self.config = configHandler.ConfigHandler()
@@ -228,6 +228,8 @@ if __name__ == "__main__":
     """
     Main program starts
     """
+    
+    os.environ["DJANGO_SETTINGS_MODULE"] = "webdb.settings.py"    
     
     def on_ctrlc(sig, func=None):
         """

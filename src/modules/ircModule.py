@@ -23,8 +23,6 @@ import moduleManager
 from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientFactory
 
-from xmpp import producerBot
-
 @moduleManager.register("irc")
 def setup_module(config):
     """
@@ -115,8 +113,7 @@ class IRCProtocol(Protocol):
         elif data.find(self.factory.getConfig()['currenttopic_grammar']) != -1: # currenttopic
 	        pass
         elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
-            #moduleCoordinator.ModuleCoordinator().addEvent(md.LOG_EVENT, "Got irc messsage!") # todo with logging
-            pass
+            self.factory.putLog(data)
         elif data.find(self.factory.getConfig()['notice_grammar']) != -1: # notice
             pass
         elif data.find(self.factory.getConfig()['mode_grammar']) != -1: # mode
@@ -148,6 +145,9 @@ class IRCClientFactory(ClientFactory):
         """
         
         return self.config
+        
+    def putLog(self, log):
+        moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, log, config=self.config)
         
     def getFirstPing(self):
         """

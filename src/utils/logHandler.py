@@ -22,48 +22,20 @@
 # TODO LogHandler
 import time
 from twisted.internet import reactor, defer
-
-class Singleton(type):
-    """
-    Singleton pattern used to only create one 
-    LogHandler instance
-    """
-    
-    def __init__(cls, name, bases, dict):
-        """
-        Constructor
-        """
-        
-        super(Singleton, cls).__init__(name, bases, dict)
-        cls.instance = None
- 
-    def __call__(cls, *args, **kw):
-        """
-        Return instance
-        """
-        
-        if cls.instance is None:
-            cls.instance = super(Singleton, cls).__call__(*args, **kw)
- 
-        return cls.instance
+from xmpp import producerBot
 
 class LogHandler(object):
 
-    __metaclass__ = Singleton
+    def __init__(self):
+        pass
         
-    def handleLog(self, data):
-        d = self.putToXMPP(data)
-        if d != None:
-            d.addCallback(self.putToDB)
+    def handleLog(self, data, config):
+        self.putToXMPP(data, config)
+        self.putToDB(data, config)
             
-    def putToDB(self, data):
-        time.sleep(2)
-        print "DB: " + data
+    def putToDB(self, data, config):
+        print "DB: " + data + " botnet:" + config['botnet']
         
-    def putToXMPP(self, data):
-        d = defer.Deferred()
-        print "XMPP: " + data
-        reactor.callLater(0, d.callback, data)
-        return d 
-        
+    def putToXMPP(self, data, config):
+        producerBot.ProducerBot().sendLog("botnet: " + config['botnet'])
         

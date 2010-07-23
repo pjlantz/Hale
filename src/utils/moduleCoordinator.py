@@ -24,7 +24,10 @@ from utils import logHandler
 from twisted.internet import reactor
 from threading import Lock
 from xmpp import producerBot
-from conf import configHandler	
+from conf import configHandler
+
+from webdb.hale.models import Botnet
+from django.db import IntegrityError
 
 class synchronized(object):
     """ 
@@ -83,7 +86,7 @@ class EventHolder(object):
     Holds an event
     """
     
-    def __init__(self, eventType, data, hash=''):
+    def __init__(self, eventType, data, hash='', config=None):
         """
         Constructor
         """
@@ -91,6 +94,7 @@ class EventHolder(object):
         self.eventType = eventType
         self.data = data
         self.hash = hash
+        self.config = config
         
     def getType(self):
         """
@@ -113,6 +117,14 @@ class EventHolder(object):
         """
         
         return self.hash
+        
+    def getConfig(self):
+        """
+        Returns the config used by the module
+        if the event is a LOG_EVENT
+        """
+        
+        return self.config
         
 class Dispatcher(threading.Thread):
     """
@@ -155,6 +167,7 @@ class ModuleCoordinator(threading.Thread):
         self.bucket = Queue.Queue()
         self.events = list()
         self.runEventListener = True
+        self.log = logHandler.LogHandler()
         threading.Thread.__init__(self)
         
     def run(self):
@@ -166,21 +179,20 @@ class ModuleCoordinator(threading.Thread):
         while self.runEventListener:
             if self.events:
                 ev = self.events.pop()
-                if ev.getType() == LOG_EVENT:
-                    logHandler.LogHandler().handleLog(ev.getData())
-                    print "From eventMonitor: " + ev.getData()
                 if ev.getType() == START_EVENT:
                     from modules import moduleManager
                     moduleManager.executeExternal(ev.getData()['module'], 'external_' + str(len(self.modules) + 1), ev.getData(), ev.getHash())
                 if ev.getType() == STOP_EVENT:
                     pass
+                if ev.getType() == LOG_EVENT:
+                    self.log.handleLog(ev.getData(), ev.getConfig())
                 
-    def addEvent(self, eventType, data, hash=''):
+    def addEvent(self, eventType, data, hash='', config=None):
          """
          Add an event to the list
          """
          
-         self.events.append(EventHolder(eventType, data, hash))
+         self.events.append(EventHolder(eventType, data, hash, config))
     
     def add(self, moduleExe, moduleId, hash, external=False):
         """
@@ -205,6 +217,13 @@ class ModuleCoordinator(threading.Thread):
                 
         self.modules[moduleId] = moduleExe
         self.configHashes[moduleId] = hash
+        conf = self.modules[moduleId].getConfig()
+        confStr = configHandler.ConfigHandler().getStrFromDict(conf)
+        b = Botnet(hash=hash, botnettype=conf['module'], host=conf['botnet'], config=confStr)
+        try:
+            b.save()
+        except IntegrityError:
+            pass
         moduleExe.run()
         if self.dispatcherFirstStart:
             Dispatcher().start()
