@@ -55,7 +55,8 @@ then automatically import it and check for errors.
 3) In modules.conf edit the configuration, in this case:
 
 # specify unique configs for module
-# a * means that all strings equal to the one after the start
+# a * means that all configs contaning the strings equal to the one 
+# after the * will be treated as unique. 
 # in this example all pass_grammar, mode_grammar etc should be 
 # treated as unique keys
 [uniqueKeys]

@@ -25,36 +25,57 @@ class Proxy(models.Model):
     Holds proxy host and credentials
     """
     
-    host = models.CharField(max_length=100)
+    host = models.CharField(max_length=32)
     port = models.IntegerField()
-    user = models.CharField(max_length=100)
-    password = models.CharField(max_length=100)
+    user = models.CharField(max_length=32)
+    password = models.CharField(max_length=32)
+    
+    def getPass(self):
+        return self.password
+    def getUser(self):
+        return self.user
+    def getPort(self):
+        return self.port
+    def getHost(self):
+        return self.host
 
 class Log(models.Model):
     """
     Keeps all logs
     """
     
-    botnetid = models.CharField(max_length=100)
+    botnet = models.ForeignKey('Botnet')
+    datetime = models.DateTimeField(auto_now=True)
+    logdata = models.CharField(max_length=100)
 
 class Botnet(models.Model):
     """
     Keeps botnet details
     """
     
+    hash = models.CharField(max_length=32)
+    module = models.ForeignKey('Module')
     host = models.CharField(max_length=100)
+    longitude = models.FloatField()
+    latitude = models.FloatField()
 
 class Module(models.Model):
     """
     Keeps the module source and config examples
     """
     
-    module = models.CharField(max_length=100)
-    conf = models.CharField(max_length=100)
+    modulename = models.CharField(max_length=32)
+    filename = models.CharField(max_length=32)
+    module = models.FileField(upload_to='downloads')
+    confexample = models.TextField()
 
-class Files(models.Model):
+class File(models.Model):
     """
-    Holds the analysis URL from the sandbox submitted to
+    Holds the analysis URL for the sandbox submitted to
     """
     
-    analysisURL = models.CharField(max_length=100)
+    analysisurl = models.URLField()
+    botnet = models.ForeignKey('Botnet')
+    hash = models.CharField(max_length=32)
+    filename = models.CharField(max_length=100)
+    
