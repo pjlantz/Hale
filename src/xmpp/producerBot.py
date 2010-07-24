@@ -240,6 +240,5 @@ class ProducerBot(object):
         Send logs to the data sharing channel
         """
         
-        print msg
         self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
         

@@ -19,10 +19,13 @@
 ################################################################################
 
 
-# TODO LogHandler
 import time
 from twisted.internet import reactor, defer
 from xmpp import producerBot
+from conf import configHandler
+
+from webdb.hale.models import Botnet, Log
+from django.db import IntegrityError
 
 class LogHandler(object):
 
@@ -30,11 +33,15 @@ class LogHandler(object):
         pass
         
     def handleLog(self, data, config):
+        reactor.callInThread(self.putToDB, data, config)
         self.putToXMPP(data, config)
-        self.putToDB(data, config)
             
     def putToDB(self, data, config):
-        print "DB: " + data + " botnet:" + config['botnet']
+        confStr = configHandler.ConfigHandler().getStrFromDict(config)
+        botnetHash = configHandler.ConfigHandler().getHashFromConfStr(confStr)
+        botnetobject = Botnet.objects.get(hash=botnetHash)
+        Log(botnet=botnetobject, logdata=data).save()
+        botnetobject.save()
         
     def putToXMPP(self, data, config):
         producerBot.ProducerBot().sendLog("botnet: " + config['botnet'])

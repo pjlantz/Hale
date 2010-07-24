@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-import Queue
+import Queue, datetime
 import threading, time
 from utils import logHandler
 from twisted.internet import reactor
