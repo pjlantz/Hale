@@ -19,12 +19,9 @@
 ################################################################################
 
 
-import time
-from twisted.internet import reactor, defer
+from twisted.internet import reactor
 from xmpp import producerBot
-
 from webdb.hale.models import Botnet, Log
-from django.db import IntegrityError
 
 class LogHandler(object):
 

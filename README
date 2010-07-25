@@ -6,20 +6,21 @@ import moduleManager
 from utils import moduleInterface
 
 @moduleManager.register("irc")
-def module_setup(config):
+def module_setup(config, hash):
     """
     Function to register modules, simply
     implement this to pass along the config
     to the module object and return it back
     """
     
-    return IRC(config)
+    return IRC(config, hash)
 
 # must inherit from Module class
 class IRC(moduleInterface.Module):
 
-   def __init__(self, config):
+   def __init__(self, config, hash):
        self.config = config
+       self.hash = hash
    
    # must be implemented
    def stop(self):
@@ -34,11 +35,11 @@ class IRC(moduleInterface.Module):
        return self.config
 
 Add decorator for the register function (in this case module_setup)
-which will be called with the current configuration as argument. This 
-function can be named anything. Pass along the configurations to the 
-module object, the configHandler catches KeyErrors so if wrong 
-configurations are sent to this function configHandler will notify 
-you about it. 
+which will be called with the current configuration as argument and the
+config hash made of the unique keys. This function can be named anything. 
+Pass along the configurations to the module object, the configHandler 
+catches KeyErrors so if wrong configurations are sent to this function 
+configHandler will notify you about it. 
 
 Also follow the naming convention nameModule.py and @moduleManager.register("name") 
 and import the moduleManager, if not the moduleManager will notify 
@@ -93,9 +94,11 @@ where config is a string representation of the configuration, for example
 
 module=irc botnet=irc.freenode.net etc..
 
-The sensor then replies with a 
+The sensor then replies with with an acknowledgement together with the config hash
+which can be used to distringuish the botnet logs from the other logs in the share channel
+Example of acknowledgment:
 
-startTrackAck
+startTrackAck hash
 
 if no one else is monitoring this botnet, otherwise a startTrackNack is received if the 
 botnet is already monitored or the sensor does not have the module installed for this botnet 
