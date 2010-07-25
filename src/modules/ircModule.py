@@ -24,14 +24,14 @@ from twisted.internet import reactor, defer
 from twisted.internet.protocol import Protocol, ClientFactory
 
 @moduleManager.register("irc")
-def setup_module(config):
+def setup_module(config, hash):
     """
     Function to register modules, simply
     implement this to pass along the config
     to the module object and return it back
     """
 
-    return IRC(config)
+    return IRC(config, hash)
 
 class IRC(moduleInterface.Module):
     """
@@ -39,7 +39,7 @@ class IRC(moduleInterface.Module):
     botnet monitoring
     """
 
-    def __init__(self, config):
+    def __init__(self, config, hash):
         """
         Constructor sets up configs and moduleCoordinator object
         """
@@ -52,7 +52,7 @@ class IRC(moduleInterface.Module):
         Start execution
         """
         
-        factory = IRCClientFactory(self.config)
+        factory = IRCClientFactory(self.hash, self.config)
         host = self.config['botnet']
         port = int(self.config['port'])
         self.connector = reactor.connectTCP(host, port, factory)
@@ -109,19 +109,22 @@ class IRCProtocol(Protocol):
 				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + '\r\n') # join without pass
 				self.factory.setFirstPing()
         elif data.find(self.factory.getConfig()['topic_grammar']) != -1: # topic
-           pass
+           self.factory.putLog(data)
         elif data.find(self.factory.getConfig()['currenttopic_grammar']) != -1: # currenttopic
-	        pass
+           firstline = data.split('\r\n')[0].split(self.factory.getConfig()['nick'])[1].strip()
+           chan = firstline.split(' ')[0].strip()
+           topic = firstline.split(' ')[1].strip()
+           secondline = data.split('\r\n')[1].split(self.factory.getConfig()['channel'])[1].strip()
+           setby = secondline.split(' ')[0].strip()
+           logmsg = 'CURRENTTOPIC ' + chan + ' ' + topic + ' set by ' + setby
+           self.factory.putLog(logmsg)
         elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
-            self.factory.putLog(data)
-        elif data.find(self.factory.getConfig()['notice_grammar']) != -1: # notice
+            if not data.find(self.factory.getConfig()['version_grammar']) != -1:
+                self.factory.putLog(data)
+        else: # unrecognized commands, TODO
             pass
-        elif data.find(self.factory.getConfig()['mode_grammar']) != -1: # mode
-            pass
-        else: # log unrecognized commands, can also be MOTD and NAMES list
-	        pass
 	      
-        #urlHandler.URLHandler(self.factory.getConfig(), data).start() #TODO without threads
+        #urlHandler.URLHandler(self.factory.getConfig(), data).start() # TODO without threads
         
 class IRCClientFactory(ClientFactory):
     """
@@ -130,7 +133,7 @@ class IRCClientFactory(ClientFactory):
 
     protocol = IRCProtocol # tell base class what proto to build
 
-    def __init__(self, config):
+    def __init__(self, hash, config):
         """
         Constructor, sets first ping received flag
         and config to be used
@@ -138,6 +141,7 @@ class IRCClientFactory(ClientFactory):
         
         self.config = config
         self.firstPing = True
+        self.hash = hash
 
     def getConfig(self):
         """
@@ -147,14 +151,14 @@ class IRCClientFactory(ClientFactory):
         return self.config
         
     def putLog(self, log):
-        moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, log, config=self.config)
+        moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, log, self.hash, self.config)
         
     def getFirstPing(self):
         """
         Returns get first ping flag
         """
         
-        return self.getFirstPing
+        return self.firstPing
         
     def __call__(self):
         """

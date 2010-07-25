@@ -59,7 +59,7 @@ def execute(module, identifier, hash):
     try:
         if configHandler.ConfigHandler().correctConfig(module):
             confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
-            regmod = func(confCopy)
+            regmod = func(confCopy, hash)
             if isinstance(regmod, moduleInterface.Module):
 	            moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash)
             else:
@@ -76,7 +76,7 @@ def executeExternal(module, identifier, config, hash):
     """
     
     func = modules[module]
-    regmod = func(config)
+    regmod = func(config, hash)
     moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash, True)
         
 def handle_modules_onstart():

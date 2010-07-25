@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-import Queue, datetime
+import Queue, os
 import threading, time
 from utils import logHandler
 from twisted.internet import reactor
@@ -26,6 +26,7 @@ from threading import Lock
 from xmpp import producerBot
 from conf import configHandler
 
+import GeoIP
 from webdb.hale.models import Botnet
 from django.db import IntegrityError
 
@@ -168,6 +169,10 @@ class ModuleCoordinator(threading.Thread):
         self.events = list()
         self.runEventListener = True
         self.log = logHandler.LogHandler()
+        geodata = os.getcwd() + "/utils/GeoIP.dat"
+        if os.name == "nt":
+            geodata = geodata.replace("/", "\\")
+        self.geo = GeoIP.open(geodata, GeoIP.GEOIP_STANDARD)
         threading.Thread.__init__(self)
         
     def run(self):
@@ -185,7 +190,7 @@ class ModuleCoordinator(threading.Thread):
                 if ev.getType() == STOP_EVENT:
                     pass
                 if ev.getType() == LOG_EVENT:
-                    self.log.handleLog(ev.getData(), ev.getConfig())
+                    self.log.handleLog(ev.getData(), ev.getHash(), ev.getConfig())
                 
     def addEvent(self, eventType, data, hash='', config=None):
          """
@@ -218,12 +223,16 @@ class ModuleCoordinator(threading.Thread):
         self.modules[moduleId] = moduleExe
         self.configHashes[moduleId] = hash
         conf = self.modules[moduleId].getConfig()
-        confStr = configHandler.ConfigHandler().getStrFromDict(conf)
-        b = Botnet(hash=hash, botnettype=conf['module'], host=conf['botnet'], config=confStr)
+        confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
+        coord = self.geo.record_by_name(conf['botnet'])
+        b = Botnet(botnethashvalue=hash, botnettype=conf['module'], host=conf['botnet'], config=confStr, longitude=coord['longitude'], latitude=coord['latitude'])
         try:
             b.save()
         except IntegrityError:
-            pass
+            b = Botnet.objects.get(botnethashvalue=hash)
+            b.longitude = coord['longitude']
+            b.latitude = coord['latitude']
+            b.save()
         moduleExe.run()
         if self.dispatcherFirstStart:
             Dispatcher().start()

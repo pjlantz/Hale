@@ -54,7 +54,7 @@ class Botnet(models.Model):
     """
     
     # hash value of the unique keys from the config
-    hash = models.CharField(max_length=32, unique=True)
+    botnethashvalue = models.CharField(max_length=32, unique=True)
     #module = models.ForeignKey('Module')
     # irc, http etc.
     botnettype = models.CharField(max_length=32)
@@ -63,8 +63,8 @@ class Botnet(models.Model):
     config = models.TextField()
     firstseen = models.DateTimeField(auto_now_add=True)
     lastseen = models.DateTimeField(auto_now=True)
-    #longitude = models.FloatField()
-    #latitude = models.FloatField()
+    longitude = models.FloatField()
+    latitude = models.FloatField()
 
 class Module(models.Model):
     """

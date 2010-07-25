@@ -90,7 +90,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'south',
-    'hale',
+    'webdb.hale',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
 )

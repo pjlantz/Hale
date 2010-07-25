@@ -19,6 +19,7 @@
 ################################################################################
 
 import cmd, sys, os, signal
+os.environ["DJANGO_SETTINGS_MODULE"] = "webdb.settings"
 import threading, time
 from conf import configHandler
 from modules import moduleManager
@@ -228,8 +229,6 @@ if __name__ == "__main__":
     """
     Main program starts
     """
-    
-    os.environ["DJANGO_SETTINGS_MODULE"] = "webdb.settings.py"    
     
     def on_ctrlc(sig, func=None):
         """

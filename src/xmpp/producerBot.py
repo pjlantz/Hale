@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-import urllib2, hashlib
+import hashlib
 import sleekxmpp, random, time
 from threading import Lock
 import threading, hashlib
@@ -104,11 +104,7 @@ class ProducerBot(object):
         self.xmpp.add_event_handler("groupchat_message", self.handleIncomingGroupChatMessage)
         self.xmpp.add_event_handler("message", self.handleIncomingMessage)
         
-        identifier = ''
-        try:
-            identifier = urllib2.urlopen('http://whatismyip.org').read().strip() + str(random.randint(1, 10000))
-        except Exception:
-            identifier = str(random.randint(1, 10000))
+        identifier = self.jid
         md5 = hashlib.new('md5')
         md5.update(identifier)
         self.id = md5.hexdigest()
@@ -231,7 +227,7 @@ class ProducerBot(object):
                     eventType = moduleCoordinator.START_EVENT
                     configDict = configHandler.ConfigHandler().getDictFromStr(config)
                     moduleCoordinator.ModuleCoordinator().addEvent(eventType, configDict, hash)
-                    self.xmpp.sendMessage(toStr, 'startTrackAck', None, "chat")
+                    self.xmpp.sendMessage(toStr, 'startTrackAck ' + hash, None, "chat")
                 else:
                     self.xmpp.sendMessage(toStr, 'startTrackNack', None, "chat")
     

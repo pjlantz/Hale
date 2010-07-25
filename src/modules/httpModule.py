@@ -25,14 +25,14 @@ from twisted.internet import reactor, protocol
 from twisted.web.client import HTTPPageGetter
 
 @moduleManager.register("http")
-def setup_module(config):
+def setup_module(config, hash):
     """
     Function to register modules, simply
     implement this to pass along the config
     to the module object and return it back
     """
 
-    return HTTP(config)
+    return HTTP(config, hash)
     
 class HTTP(moduleInterface.Module):
     """
@@ -41,7 +41,7 @@ class HTTP(moduleInterface.Module):
     and receiving commands and instructions
     """
     
-    def __init__(self, conf):
+    def __init__(self, conf, hash):
         """
         Constructor sets up configs and task to do
         a looping call 
@@ -56,7 +56,7 @@ class HTTP(moduleInterface.Module):
         Start execution
         """
         
-        self.factory = HTTPClientFactory(self, self.config)
+        self.factory = HTTPClientFactory(self, self.hash, self.config)
         self.host = self.config['botnet']
         self.port = int(self.config['port'])
         self.connect()
@@ -113,11 +113,12 @@ class HTTPClientFactory(protocol.ClientFactory):
 
     protocol = HTTPProtocol
 
-    def __init__(self, module, config):
+    def __init__(self, module, hash, config):
         """
         Constructor
         """
         
+        self.hash = hash
         self.config = config
         self.cookies = {}
         self.url = self.config['botnet']
@@ -155,7 +156,6 @@ class HTTPClientFactory(protocol.ClientFactory):
         the new reconnect interval
         """
     
-        print response
         if self.config['use_base64decoding'] == "True":
             try:
                 response = base64.b64decode(response)
@@ -163,10 +163,11 @@ class HTTPClientFactory(protocol.ClientFactory):
                 # Could not decode data, maybe not base64 encoded, got response
                 return
             
-            # extract wait grammar for new reconnect interval    
+            # extract wait grammar for new reconnect interval
+            moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, response, self.hash, self.config)
             try:
                 self.wait = int(response.split(self.config['wait_grammar'])[1].split(self.config['response_separator'])[1])
-                reactor.callLater(self.wait, self.module.startLoop)
+                reactor.callLater(self.wait * 60, self.module.startLoop)
             except IndexError:
                 # Could not split out wait grammar, maybe base64 decoding is necessary, got response:
                 return

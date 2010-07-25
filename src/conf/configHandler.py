@@ -134,16 +134,18 @@ class ConfigHandler(object):
         self.currentSection = section
         print "[ConfigHandler]: Using " + section
             
-    def getHashFromConfStr(self, confStr):
+    def getHashFromConfStr(self, confStr, toDB=False):
         """
         Get the hash value of the config,
         used by the producer bot
         """
         
+        moduleError = False
         dict = self.getDictFromStr(confStr)
-        moduleError = self.__checkModule(dict)
-        if moduleError:
-            return '', moduleError
+        if not toDB:
+            moduleError = self.__checkModule(dict)
+            if moduleError:
+                return '', moduleError
         dictStr = self.getStrFromDict(dict, True)
         md5 = hashlib.new('md5')
         md5.update(dictStr.strip())
@@ -161,13 +163,18 @@ class ConfigHandler(object):
             return False
         return True
         
-    def getStrFromDict(self, dict, external=False):
+    def getStrFromDict(self, dict, external=False, toDB=False):
         """
         Returns a string from a dictionary with
-        only unique keys
+        only unique keys, or all keys if toDB is set
+        to True
         """
-    
+        
         dictStr = ''
+        if toDB:
+            for key in dict.iterkeys():
+                dictStr += key + '=' + dict[key] + ' '
+            return dictStr.strip()
         items = None
         if external:
             items = dict.items()
