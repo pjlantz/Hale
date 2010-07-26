@@ -393,10 +393,10 @@ class ClientFactory (protocol.ClientFactory):
 
 class ProxyClientCreator(protocol.ClientCreator):
 
-	def connectSocks5Proxy(self,remotehost,remoteport,proxy,proxyport,id):
+	def connectSocks5Proxy(self,remotehost,remoteport,proxy,proxyport,id,proxylogin=None,proxypass=None):
 	   d = defer.Deferred()
 	   f = protocol._InstanceFactory(self.reactor,self.protocolClass(*self.args, **self.kwargs),d)
-	   c = ClientConnector(host=remotehost,port=remoteport,sockshost=proxy,socksport=proxyport,otherFactory=f,reactor=self.reactor)
+	   c = ClientConnector(host=remotehost,port=remoteport,sockshost=proxy,socksport=proxyport,otherFactory=f,reactor=self.reactor, login=proxylogin, password=proxypass)
 	   return c
 
 

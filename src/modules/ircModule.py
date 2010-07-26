@@ -46,18 +46,29 @@ class IRC(moduleInterface.Module):
         
         self.hash = hash
         self.config = config
+        self.prox = proxySelector.ProxySelector()
          
     def run(self):
         """
         Start execution
         """
-        
+
         factory = IRCClientFactory(self.hash, self.config)
         host = self.config['botnet']
         port = int(self.config['port'])
-        self.connector = reactor.connectTCP(host, port, factory)
-        #socksify = socks5.ProxyClientCreator(reactor, factory)
-        #self.connector = socksify.connectSocks5Proxy(host, port, "127.0.0.1", 1080, "HALE")
+        proxyInfo = self.prox.getRandomProxy()
+        if proxyInfo == None:
+            self.connector = reactor.connectTCP(host, port, factory)
+        else:
+            proxyHost = proxyInfo['HOST']
+            proxyPort = proxyInfo['PORT']
+            proxyUser = proxyInfo['USER']
+            proxyPass = proxyInfo['PASS']
+            socksify = socks5.ProxyClientCreator(reactor, factory)
+            if len(proxyUser) == 0:
+                self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE")
+            else:
+                self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE", proxyUser, proxyPass)
         
     def stop(self):
         """

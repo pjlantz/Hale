@@ -56,9 +56,16 @@ class HTTP(moduleInterface.Module):
         Start execution
         """
         
+        self.prox = proxySelector.ProxySelector()
         self.factory = HTTPClientFactory(self, self.hash, self.config)
         self.host = self.config['botnet']
         self.port = int(self.config['port'])
+        self.proxyInfo = self.prox.getRandomProxy()
+        if self.proxyInfo != None:
+            self.proxyHost = self.proxyInfo['HOST']
+            self.proxyPort = self.proxyInfo['PORT']
+            self.proxyUser = self.proxyInfo['USER']
+            self.proxyPass = self.proxyInfo['PASS']
         self.connect()
         
     def connect(self):
@@ -69,8 +76,15 @@ class HTTP(moduleInterface.Module):
     
         if not self.cont:
             return
-            
-        self.connector = reactor.connectTCP(self.host, self.port, self.factory) # TODO: socksify
+        
+        if self.proxyInfo == None:
+            self.connector = reactor.connectTCP(self.host, self.port, self.factory)
+        else:
+            socksify = socks5.ProxyClientCreator(reactor, self.factory)
+            if len(self.proxyUser) == 0:
+                self.connector = socksify.connectSocks5Proxy(self.host, self.port, self.proxyHost, self.proxyPort, "HALE")
+            else:
+                self.connector = socksify.connectSocks5Proxy(self.host, self.port, self.proxyHost, self.proxyPort, "HALE", self.proxyUser, self.proxyPass)        
             
     def startLoop(self):
         """
@@ -155,7 +169,7 @@ class HTTPClientFactory(protocol.ClientFactory):
         do so in the config file. Logs data and extract
         the new reconnect interval
         """
-    
+        
         if self.config['use_base64decoding'] == "True":
             try:
                 response = base64.b64decode(response)

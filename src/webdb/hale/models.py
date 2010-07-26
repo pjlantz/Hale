@@ -29,15 +29,6 @@ class Proxy(models.Model):
     port = models.IntegerField()
     user = models.CharField(max_length=32)
     password = models.CharField(max_length=32)
-    
-    def getPass(self):
-        return self.password
-    def getUser(self):
-        return self.user
-    def getPort(self):
-        return self.port
-    def getHost(self):
-        return self.host
 
 class Log(models.Model):
     """
