@@ -18,6 +18,7 @@
 #
 ################################################################################
 
+import re
 from utils import *
 import moduleManager
 from twisted.internet import reactor, defer
@@ -110,6 +111,8 @@ class IRCProtocol(Protocol):
         Data is received
         """
         
+        checkHost = data.split(':')[1].split(' ')[0].strip()
+        
         if data.find(self.factory.getConfig()['ping_grammar']) != -1: # ping
             self.transport.write(self.factory.getConfig()['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # send pong
             if self.factory.getFirstPing():
@@ -132,8 +135,15 @@ class IRCProtocol(Protocol):
         elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
             if not data.find(self.factory.getConfig()['version_grammar']) != -1:
                 self.factory.putLog(data)
-        else: # unrecognized commands, TODO
-            pass
+        else: # unrecognized commands
+            self.expr = re.compile('!~.*?@')
+            match = self.expr.findall(checkHost)
+            if match:
+                foundGrammar = False
+                grammars = self.factory.getConfig().values()
+                command = data.split(':')[1].split(' ')[1]
+                if command not in grammars:
+                    self.factory.putLog(data)
 	      
         #urlHandler.URLHandler(self.factory.getConfig(), data).start() # TODO without threads
         
