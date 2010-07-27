@@ -46,7 +46,6 @@ class Botnet(models.Model):
     
     # hash value of the unique keys from the config
     botnethashvalue = models.CharField(max_length=32, unique=True)
-    #module = models.ForeignKey('Module')
     # irc, http etc.
     botnettype = models.CharField(max_length=32)
     host = models.CharField(max_length=100)

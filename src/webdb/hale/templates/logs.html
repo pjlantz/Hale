@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Hale</h1>
+<h3>Details</h3>
+<br />
+{% if logs %}
+    <table border="1">
+    <tr><th>Host</th><th>Type</th><th>Hash</th><th>Longitude</th><th>Latitude</th><th>First seen</th><th>Last seen</th></tr>
+    <tr><td>{{ botnet.host }}</td><td> {{ botnet.botnettype }}</td><td> {{ botnet.botnethashvalue }}</td><td> {{ botnet.longitude }}</td><td> {{ botnet.latitude }}</td><td> {{ botnet.firstseen }}</td><td> {{ botnet.lastseen }}</td></tr>
+    </table> 
+    <br />
+    <h3>Configuration</h3>
+    <br />
+    <p>{{botnet.config}}
+    <br />
+    <h3>Logs</h3>
+    <br />
+    <table border="1">
+    <tr><th>Date & Time</th><th>Log data</th>
+    {% for log in logs %}
+        <tr><td>[{{log.datetime}}]</td><td> {{ log.logdata }}</td></tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No logs for this botnet yet.</p>
+{% endif %}
+
+{% endblock %}

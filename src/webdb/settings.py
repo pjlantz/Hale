@@ -77,11 +77,11 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'webdb.urls'
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+import os
+templateDir = os.getcwd() + "/hale/templates/"
+if os.name == "nt":
+    templateDir = templateDir.replace("/", "\\")
+TEMPLATE_DIRS = (templateDir)
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -89,8 +89,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
+    'django.contrib.admin',
     'south',
     'webdb.hale',
-    # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
 )

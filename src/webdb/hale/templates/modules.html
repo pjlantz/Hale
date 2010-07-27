@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Hale</h1>
+<h3>Modules</h3>
+<br />
+{% if modules %}
+    <ul>
+    {% for module in modules %}
+        <li><a href="/module/{{ module.id }}/">{{ module.modulename }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No uploaded modules</p>
+{% endif %}
+
+{% endblock %}

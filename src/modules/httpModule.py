@@ -200,7 +200,7 @@ class HTTPClientFactory(protocol.ClientFactory):
         pass
         
     def gotHeaders(self, headers):
-        print headers
+        pass
         
     def noPage(self, reason):
         pass
