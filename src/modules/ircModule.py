@@ -88,8 +88,7 @@ class IRC(moduleInterface.Module):
         
 class IRCProtocol(Protocol):
     """
-    Protocol taking care of connection, incoming
-    data and outgoing
+    Protocol taking care of connection
     """
 
     factory = None
@@ -99,12 +98,12 @@ class IRCProtocol(Protocol):
         When connection is made
         """
         
-        if self.factory.getConfig()['password'] != 'None':
-            self.transport.write(self.factory.getConfig()['pass_grammar'] + ' ' + self.factory.getConfig()['password'] + '\r\n') # connect with pass
-        self.transport.write(self.factory.getConfig()['nick_grammar'] + ' ' + self.factory.getConfig()['nick'] + '\r\n') # send NICK grammar
-        self.transport.write(self.factory.getConfig()['user_grammar'] + ' ' + self.factory.getConfig()['username'] + ' ' +  
-        self.factory.getConfig()['username'] + ' ' + self.factory.getConfig()['username'] + ' :' + 
-        self.factory.getConfig()['realname'] + '\r\n') # sebd USER grammar
+        if self.factory.config['password'] != 'None':
+            self.transport.write(self.factory.config['pass_grammar'] + ' ' + self.factory.config['password'] + '\r\n') # connect with pass
+        self.transport.write(self.factory.config['nick_grammar'] + ' ' + self.factory.config['nick'] + '\r\n') # send NICK grammar
+        self.transport.write(self.factory.config['user_grammar'] + ' ' + self.factory.config['username'] + ' ' +  
+        self.factory.config['username'] + ' ' + self.factory.config['username'] + ' :' + 
+        self.factory.config['realname'] + '\r\n') # send USER grammar
 
     def dataReceived(self, data):
         """
@@ -113,39 +112,39 @@ class IRCProtocol(Protocol):
         
         checkHost = data.split(':')[1].split(' ')[0].strip()
         
-        if data.find(self.factory.getConfig()['ping_grammar']) != -1: # ping
-            self.transport.write(self.factory.getConfig()['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # send pong
-            if self.factory.getFirstPing():
-				if self.factory.getConfig()['channel_pass'] != 'None': # joing with pass
-				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + ' ' + 
-				    self.factory.getConfig()['channel_pass'] + '\r\n')
+        if data.find(self.factory.config['ping_grammar']) != -1: # ping
+            self.transport.write(self.factory.config['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # send pong
+            if self.factory.firstPing:
+				if self.factory.config['channel_pass'] != 'None': # joing with pass
+				    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + ' ' + 
+				    self.factory.config['channel_pass'] + '\r\n')
 				else:
-				    self.transport.write(self.factory.getConfig()['join_grammar'] + ' ' + self.factory.getConfig()['channel'] + '\r\n') # join without pass
-				self.factory.setFirstPing()
-        elif data.find(self.factory.getConfig()['topic_grammar']) != -1: # topic
+				    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + '\r\n') # join without pass
+				self.factory.firstPing = False
+        elif data.find(self.factory.config['topic_grammar']) != -1: # topic
            self.factory.putLog(data)
-        elif data.find(self.factory.getConfig()['currenttopic_grammar']) != -1: # currenttopic
-           firstline = data.split('\r\n')[0].split(self.factory.getConfig()['nick'])[1].strip()
+        elif data.find(self.factory.config['currenttopic_grammar']) != -1: # currenttopic
+           firstline = data.split('\r\n')[0].split(self.factory.config['nick'])[1].strip()
            chan = firstline.split(' ')[0].strip()
            topic = firstline.split(' ')[1].strip()
-           secondline = data.split('\r\n')[1].split(self.factory.getConfig()['channel'])[1].strip()
+           secondline = data.split('\r\n')[1].split(self.factory.config['channel'])[1].strip()
            setby = secondline.split(' ')[0].strip()
            logmsg = 'CURRENTTOPIC ' + chan + ' ' + topic + ' set by ' + setby
            self.factory.putLog(logmsg)
-        elif data.find(self.factory.getConfig()['privmsg_grammar']) != -1: # privmsg
-            if not data.find(self.factory.getConfig()['version_grammar']) != -1:
-                self.factory.putLog(data)
+        elif data.find(self.factory.config['privmsg_grammar']) != -1: # privmsg
+            if not data.find(self.factory.config['version_grammar']) != -1:
+                if not data.find(self.factory.config['time_grammar']) != -1:
+                    self.factory.putLog(data)
         else: # unrecognized commands
             self.expr = re.compile('!~.*?@')
             match = self.expr.findall(checkHost)
             if match:
-                foundGrammar = False
-                grammars = self.factory.getConfig().values()
+                grammars = self.factory.config.values()
                 command = data.split(':')[1].split(' ')[1]
                 if command not in grammars:
                     self.factory.putLog(data)
 	      
-        #urlHandler.URLHandler(self.factory.getConfig(), data).start() # TODO without threads
+        #urlHandler.URLHandler(self.factory.config, data).start() # TODO without threads
         
 class IRCClientFactory(ClientFactory):
     """
@@ -163,23 +162,9 @@ class IRCClientFactory(ClientFactory):
         self.config = config
         self.firstPing = True
         self.hash = hash
-
-    def getConfig(self):
-        """
-        Returns config 
-        """
-        
-        return self.config
         
     def putLog(self, log):
         moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, log, self.hash, self.config)
-        
-    def getFirstPing(self):
-        """
-        Returns get first ping flag
-        """
-        
-        return self.firstPing
         
     def __call__(self):
         """
@@ -190,11 +175,3 @@ class IRCClientFactory(ClientFactory):
         p = self.protocol()
         p.factory = self
         return p
-        
-    def setFirstPing(self):
-        """
-        Set first ping flag to indicate
-        that it has been received
-        """
-        
-        self.firstPing = False

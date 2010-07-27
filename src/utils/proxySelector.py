@@ -39,3 +39,4 @@ class ProxySelector(object):
         self.proxyInfo['USER'] = proxy.user
         self.proxyInfo['PASS'] = proxy.password
         return self.proxyInfo
+        
