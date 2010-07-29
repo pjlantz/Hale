@@ -22,6 +22,7 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from webdb.hale.models import Botnet, Log, Module
 from django.template import Context, loader
+from django.contrib.auth import logout
 
 @login_required
 def index(request):
@@ -29,12 +30,11 @@ def index(request):
     t = loader.get_template('index.html')
     c = Context({'botnets': botnets,})
     return HttpResponse(t.render(c))
-    
-@login_required
-def botnets(request):
-    botnets = Botnet.objects.all()
-    t = loader.get_template('botnets.html')
-    c = Context({'botnets': botnets,})
+
+def logoff(request):
+    logout(request)
+    t = loader.get_template('logout.html')
+    c = Context({})
     return HttpResponse(t.render(c))
 
 @login_required
@@ -44,10 +44,6 @@ def log(request, log_id):
     t = loader.get_template('logs.html')
     c = Context({'logs': logs, 'botnet': botnet,})
     return HttpResponse(t.render(c))
-
-@login_required
-def module(request, mod_id):
-    return HttpResponse(mod_id)
     
 @login_required
 def modules(request):

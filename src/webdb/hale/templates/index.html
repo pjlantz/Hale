@@ -1,21 +1,79 @@
-{% extends "base.html" %}
 
-{% block content %}
+<head>
+<title>Hale - Main</title>
+  <head>
+    <style type="text/css">
+	    html * { padding:0; margin:0; }
+	    body * { padding:10px 20px; }
+	    body * * { padding:0; }
+		a:link {color: #616D7E; text-decoration: none; }
+		a:visited {color: #616D7E; text-decoration: none; }
+	    body { font:small sans-serif; background:#eee; }
+	    body>div { border-bottom:1px solid #ddd; }
+	    h1 { font-weight:normal; margin-bottom:.4em; }
+	    h1 span { font-size:60%; color:#666; font-weight:normal; }
+	    table.center { border:none; border-collapse: collapse; width:32%; }
+	    td, th { vertical-align:top; padding:2px 3px; }
+	    th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+	    td.links, th.links { vertical-align:top; padding:2px 3px; }
+	    th.links { width:12em; text-align:right; color:#666; padding-right:.5em; }
+	    #links { background:#f6f6f6; margin-left: auto ; margin-right: auto; }
+	    table.center {margin-left:auto; margin-right:auto;}
+	    #links ol li { font-family: arial; }
+	    #head { background: #ffc; text-align: center; }
+	    #map { background:#eee; border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
+	    #info {width: 300px;}
+    </style>
 
-<h1>Hale</h1>
-<h3>Main page</h3>
-<br />
-<table border="0">
-<tr>
-<td><a href="/botnets/">Logs</a></td>
-<td><a href="/modules/">Modules</a></td>
-<td><a href="/proxies/">Proxies</a></td>
-</tr>
-<tr>
-<td><a href="/files/">Files</a></td>
-<td><a href="/map/">Map</a></td>
-<td><a href="/stats/">Stats</a></td>
-</tr>
-</table> 
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <script type="text/javascript">
+      google.load("visualization", "1", {packages:["map"]});
+      google.setOnLoadCallback(drawMap);
+      function drawMap() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('number', 'Lat');
+        data.addColumn('number', 'Lon');
+        data.addColumn('string', 'Name');
+        var numberOfBotnets = 0;
+        {% for botnet in botnets %}
+            numberOfBotnets += 1;
+        {% endfor %}
+        data.addRows(numberOfBotnets);
+        var counter = 0;
+        {% for botnet in botnets %}
+            data.setCell(counter, 0, {{botnet.latitude}});
+            data.setCell(counter, 1, {{botnet.longitude}});
+            var hash = "Hash: {{botnet.botnethashvalue}}";
+            var type = "Type: {{botnet.botnettype}}";
+            var host = "Host: {{botnet.host}}";
+            data.setCell(counter, 2, '<div id="info"><p>Hash: {{ botnet.botnethashvalue }}</a></p><p>Type: {{botnet.botnettype}}</p><p>Host: {{botnet.host}}</p><p>[<a href="/log/{{ botnet.id }}/">More info</a>]</p><br/></div>');
+            counter += 1;
+        {% endfor %}
+        var map = new google.visualization.Map(document.getElementById('map'));
+        map.draw(data, {showTip: true, mapType: "normal"});
+      }
+    </script>
+  </head>
 
-{% endblock %}
+	<body>
+		<div id="head">
+			<h1>Hale</h1>
+			<h2>Botnet C&C monitor</h2>
+		</div>
+		<div id="links">
+			<table class="center" border="0">
+				<tr id="links">
+					<td id="links"><h3>&#187;<a href="/hale/">Main</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/stats/">Stats</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/logout/">Logout</a></h3></td>
+					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form>
+				</tr>
+			</table>
+		</div>
+		<br />
+		<br />
+		<br />
+        <div id="map" style="width: 1400px; height: 600px"></div>
+	</body>
+</html>

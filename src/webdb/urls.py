@@ -24,9 +24,8 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     (r'^hale/$', 'webdb.hale.views.index'),
-    (r'^botnets/$', 'webdb.hale.views.botnets'),
+    (r'^logout/$', 'webdb.hale.views.logoff'),
     (r'^modules/$', 'webdb.hale.views.modules'),
-    (r'^module/(?P<mod_id>\d+)/$', 'webdb.hale.views.module'),
     (r'^log/(?P<log_id>\d+)/$', 'webdb.hale.views.log'),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     (r'^admin/', include(admin.site.urls)),

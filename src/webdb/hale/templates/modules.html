@@ -1,17 +1,86 @@
-{% extends "base.html" %}
 
-{% block content %}
-<h1>Hale</h1>
-<h3>Modules</h3>
-<br />
-{% if modules %}
-    <ul>
-    {% for module in modules %}
-        <li><a href="/module/{{ module.id }}/">{{ module.modulename }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No uploaded modules</p>
-{% endif %}
+<head>
+<title>Hale - Modules</title>
+  <head>
+    <style type="text/css">
+	    html * { padding:0; margin:0; }
+	    body * { padding:10px 20px; }
+	    body * * { padding:0; }
+	    a:link {color: #616D7E; text-decoration: none; }
+		a:visited {color: #616D7E; text-decoration: none; }
+	    body { font:small sans-serif; background:#eee; }
+	    body>div { border-bottom:1px solid #ddd; }
+	    h1 { font-weight:normal; margin-bottom:.4em; }
+	    h1 span { font-size:60%; color:#666; font-weight:normal; }
+	    table.center { border:none; border-collapse: collapse; width:32%; }
+	    td.links, th.links {  padding:2px 3px; }
+	    th.links { width:12em; text-align:right; color:#666; padding-right:.5em; }
+	    #links { background:#f6f6f6; margin-left: auto ; margin-right: auto; }
+	    table.center {margin-left:auto; margin-right:auto;}
+	    
+	    table.modules {
+	    	border-width: 0px 0px 0px 0px;
+			border-spacing: 2px;
+			border-style: solid solid solid solid;
+			border-color: gray gray gray gray;
+			border-collapse: collapse;
+			width: 900px;
+			margin-left: auto ; margin-right: auto;
+			background:#f6f6f6;
+	    }
+	    
+	    table.modules th {
+	    	border-width: thin thin thin thin;
+			padding: 2px 2px 2px 2px;
+			border-style: solid solid solid solid;
+			border-color: gray gray gray gray;	
+	    }
+	    
+	    table.modules td {
+	    	border-width: thin thin thin thin;
+			padding: 2px 2px 2px 2px;
+			border-style: solid solid solid solid;
+			border-color: gray gray gray gray;	
+	    }
+	    
+	    #content { background:#eee; border-bottom: 0px none;}
+	    #links ol li { font-family: arial; }
+	    #head { background: #ffc; text-align: center; }
+    </style>
+  </head>
 
-{% endblock %}
+	<body>
+		<div id="head">
+			<h1>Hale</h1>
+			<h2>Botnet C&C monitor</h2>
+		</div>
+		<div id="links">
+			<table class="center" border="0">
+				<tr id="links">
+					<td id="links"><h3>&#187;<a href="/hale/">Main</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/stats/">Stats</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/logout/">Logout</a></h3></td>
+					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form>
+				</tr>
+			</table>
+		</div>
+		<br />
+		<br />
+		<br />
+		<div id="contents">
+		{% if modules %}
+		    {% for module in modules %}
+		        <table class="modules" border="0">
+			        <tr><th>Module</th><th>Configuration example</th></tr>
+			        <td>{{ module.modulename }} [Download]</td>
+			        <td>{{ module.confexample|linebreaksbr }}</td>
+		        </table>
+		        <br />
+		    {% endfor %}
+		{% else %}
+		    <p>No uploaded modules!</p>
+		{% endif %}
+		</div>
+	</body>
+</html>
