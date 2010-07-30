@@ -12,7 +12,7 @@
 	    body>div { border-bottom:1px solid #ddd; }
 	    h1 { font-weight:normal; margin-bottom:.4em; }
 	    h1 span { font-size:60%; color:#666; font-weight:normal; }
-	    table.center { border:none; border-collapse: collapse; width:32%; }
+	    table.center { border:none; border-collapse: collapse; width:25%; }
 	    td, th { vertical-align:top; padding:2px 3px; }
 	    th { width:12em; text-align:right; color:#666; padding-right:.5em; }
 	    td.links, th.links { vertical-align:top; padding:2px 3px; }
@@ -22,13 +22,72 @@
 	    #links ol li { font-family: arial; }
 	    #head { background: #ffc; text-align: center; }
 	    #map { background:#eee; border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
+	    #amountOfLogs { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
+	    #longestTracked { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
 	    #info {width: 300px;}
     </style>
 
     <script type="text/javascript" src="http://www.google.com/jsapi"></script>
     <script type="text/javascript">
       google.load("visualization", "1", {packages:["map"]});
+      google.load("visualization", "1", {packages:["corechart"]});
       google.setOnLoadCallback(drawMap);
+      google.setOnLoadCallback(drawAmountOfLogs);
+      google.setOnLoadCallback(longestTracked);
+      
+      function drawAmountOfLogs() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Botnet');
+        var numberOfBotnets = 0;
+        {% for botnet in botnets %}
+            numberOfBotnets += 1;
+            data.addColumn('number', "{{botnet.botnethashvalue}}" + " " + "{{botnet.host}}");
+        {% endfor %}
+        
+        data.addRows(numberOfBotnets);
+        data.setValue(0, 0, '');
+        var counter = 1;
+        {% for botnet in botnets %}
+            var nbr = 0;
+            {% for log in logs %}
+                if ({{log.botnet.id}} == {{botnet.id}})
+                    nbr += 1;
+            {% endfor %}
+            data.setValue(0, counter, nbr);
+            counter +=1;
+        {% endfor %}
+
+        var chart = new google.visualization.ColumnChart(document.getElementById('amountOfLogs'));
+        chart.draw(data, {backgroundColor: "#eee", title: 'Amount of logs for botnet', hAxis: {title: 'Monitored botnets'}});      	
+      }
+
+      function longestTracked() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Botnet');
+        var numberOfBotnets = 0;
+        {% for botnet in botnets %}
+            numberOfBotnets += 1;
+            data.addColumn('number', "{{botnet.botnethashvalue}}" + " " + "{{botnet.host}}");
+        {% endfor %}
+        
+        data.addRows(numberOfBotnets);
+        data.setValue(0, 0, '');
+        var counter = 1;
+        {% for botnet in botnets %}
+            var nbr = 0;
+            {% for log in logs %}
+                if ({{log.botnet.id}} == {{botnet.id}})
+                    nbr += 1;
+            {% endfor %}
+            data.setValue(0, counter, nbr);
+            counter +=1;
+        {% endfor %}
+
+        var chart = new google.visualization.ColumnChart(document.getElementById('longestTracked'));
+        chart.draw(data, {backgroundColor: "#eee", title: 'Amount of logs for botnet', hAxis: {title: 'Monitored botnets'}}); 
+        
+      } 
+
       function drawMap() {
         var data = new google.visualization.DataTable();
         data.addColumn('number', 'Lat');
@@ -58,22 +117,20 @@
 	<body>
 		<div id="head">
 			<h1>Hale</h1>
-			<h2>Botnet C&C monitor</h2>
+			<h2>Botnet C&C monitor</h2><br/><h3>&#187;<a href="/logout/">Logout</a></h3>
 		</div>
 		<div id="links">
 			<table class="center" border="0">
 				<tr id="links">
-					<td id="links"><h3>&#187;<a href="/hale/">Main</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/hale/">Overview</a></h3></td>
 					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
-					<td id="links"><h3>&#187;<a href="/stats/">Stats</a></h3></td>
-					<td id="links"><h3>&#187;<a href="/logout/">Logout</a></h3></td>
-					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form>
+					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form></td>
 				</tr>
 			</table>
 		</div>
 		<br />
-		<br />
-		<br />
         <div id="map" style="width: 1400px; height: 600px"></div>
+        <div id="amountOfLogs" style="width: 900px; height: 400px"></div>
+        <div id="longestTracked" style="width: 900px; height: 400px"></div>
 	</body>
 </html>

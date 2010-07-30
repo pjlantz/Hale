@@ -27,8 +27,9 @@ from django.contrib.auth import logout
 @login_required
 def index(request):
     botnets = Botnet.objects.all()
+    logs = Log.objects.all()
     t = loader.get_template('index.html')
-    c = Context({'botnets': botnets,})
+    c = Context({'botnets': botnets, 'logs': logs,})
     return HttpResponse(t.render(c))
 
 def logoff(request):
@@ -48,8 +49,9 @@ def log(request, log_id):
 @login_required
 def modules(request):
     modules = Module.objects.all()
+    botnets = Botnet.objects.all()
     t = loader.get_template('modules.html')
-    c = Context({'modules': modules,})
+    c = Context({'modules':modules, 'botnets':botnets,})
     return HttpResponse(t.render(c))
 
     
