@@ -23,6 +23,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
+    (r'^download/(?P<filename>.*)$', 'webdb.hale.views.download'),
     (r'^hale/$', 'webdb.hale.views.index'),
     (r'^logout/$', 'webdb.hale.views.logoff'),
     (r'^modules/$', 'webdb.hale.views.modules'),

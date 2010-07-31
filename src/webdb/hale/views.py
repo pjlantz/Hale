@@ -18,6 +18,8 @@
 #
 ################################################################################
 
+import os, mimetypes
+
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from webdb.hale.models import Botnet, Log, Module
@@ -37,6 +39,17 @@ def logoff(request):
     t = loader.get_template('logout.html')
     c = Context({})
     return HttpResponse(t.render(c))
+    
+@login_required
+def download(request, filename):
+    filePath = os.getcwd() + "/modules/" + filename
+    if os.name == "nt":
+        filePath = filePath.replace("/", "\\")
+    file = open(filePath)
+    ctype, encoding = mimetypes.guess_type(filePath)
+    response = HttpResponse(file, mimetype=ctype)
+    response['Content-Disposition'] = 'attachment; filename='+filename
+    return response
 
 @login_required
 def log(request, log_id):

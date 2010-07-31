@@ -1,5 +1,6 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 
-<head>
 <title>Hale - Modules</title>
   <head>
     <style type="text/css">
@@ -98,13 +99,13 @@
 		<br />
 		<br />
 		<br />
+		{% if modules %}
 		<div id="chart_div" style="width: 700px; height: 400px"></div>
 		<div id="contents">
-		{% if modules %}
 		    {% for module in modules %}
 		        <table class="modules" border="0">
 			        <tr><th>Module</th><th>Configuration example</th></tr>
-			        <td>{{ module.modulename }} [Download]</td>
+			        <td>{{ module.modulename }} [<a href="/download/{{ module.filename }}">Download</a>]</td>
 			        <td>{{ module.confexample|linebreaksbr }}</td>
 		        </table>
 		        <br />
