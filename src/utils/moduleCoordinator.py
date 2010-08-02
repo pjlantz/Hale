@@ -80,7 +80,8 @@ class Singleton(type):
         
 LOG_EVENT = 0
 START_EVENT = 1
-STOP_EVENT = 2
+URL_EVENT = 2
+RELIP_EVENT = 3
 
 class EventHolder(object):
     """
@@ -169,6 +170,8 @@ class ModuleCoordinator(threading.Thread):
         self.events = list()
         self.runEventListener = True
         self.log = logHandler.LogHandler()
+        self.url = logHandler.URLCheck()
+        self.relip = logHandler.CCRelatedIP()
         geodata = os.getcwd() + "/utils/GeoIP.dat"
         if os.name == "nt":
             geodata = geodata.replace("/", "\\")
@@ -187,10 +190,12 @@ class ModuleCoordinator(threading.Thread):
                 if ev.getType() == START_EVENT:
                     from modules import moduleManager
                     moduleManager.executeExternal(ev.getData()['module'], 'external_' + str(len(self.modules) + 1), ev.getData(), ev.getHash())
-                if ev.getType() == STOP_EVENT:
-                    pass
                 if ev.getType() == LOG_EVENT:
                     self.log.handleLog(ev.getData(), ev.getHash(), ev.getConfig())
+                if ev.getType() == URL_EVENT:
+                    self.url.handleData(ev.getData(), ev.getHash(), ev.getConfig())
+                if ev.getType() == RELIP_EVENT:
+                    self.relip.handleIPs(ev.getData(), ev.getHash())
                 
     def addEvent(self, eventType, data, hash='', config=None):
          """

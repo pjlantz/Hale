@@ -187,6 +187,7 @@ class ProducerBot(object):
         channel
         """
         
+        #print message
         channel = str(message['from'])
         if channel.split('/')[1] != self.jid.split('@')[0]:
 	        coordchan = self.coordchannel.split('@')[0]
@@ -230,7 +231,16 @@ class ProducerBot(object):
                     self.xmpp.sendMessage(toStr, 'startTrackAck ' + hash, None, "chat")
                 else:
                     self.xmpp.sendMessage(toStr, 'startTrackNack', None, "chat")
+                    
+    def sendFile(self, data, hash):
+        """
+        Sends base64 encoded file and its hash value
+        to the share channel 
+        """
     
+        msg = "FileCaptured hash=" + hash# + " " + data
+        self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
+        
     def sendLog(self, msg):
         """
         Send logs to the data sharing channel

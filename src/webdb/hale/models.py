@@ -37,7 +37,7 @@ class Log(models.Model):
     
     botnet = models.ForeignKey('Botnet')
     datetime = models.DateTimeField(auto_now=True)
-    logdata = models.CharField(max_length=100)
+    logdata = models.CharField(max_length=1024)
 
 class Botnet(models.Model):
     """
@@ -66,6 +66,15 @@ class Module(models.Model):
     module = models.FileField(upload_to='modules')
     # configuration example for this module
     confexample = models.TextField()
+    
+class RelatedIPs(models.Model):
+    """
+    Used to keep track of ips related to a specific
+    botnet
+    """
+    
+    botnet = models.ForeignKey('Botnet')
+    ip = models.IPAddressField(unique=True)
 
 class File(models.Model):
     """
@@ -73,9 +82,8 @@ class File(models.Model):
     submitted to together with details about the file
     """
     
-    analysisurl = models.URLField()
     botnet = models.ForeignKey('Botnet')
     hash = models.CharField(max_length=32, unique=True)
+    content = models.TextField()
     filename = models.CharField(max_length=100)
-    file = models.FileField(upload_to='files')
     

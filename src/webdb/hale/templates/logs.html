@@ -76,13 +76,31 @@
 		    <br />
 		    <p>{{botnet.config}}</p>
 		    <br />
+		    <h3>Malware</h3>
+		    <br />
+		    <table class="info" border="0">
+		    <tr><th>Filename</th><th>Hash</th>
+				{% for file in files %}
+				    <tr><td>{{file.filename}} [<a href="/file/{{file.hash}}/">Download</a>]</td><td>{{file.hash}}</td></tr>
+				{% endfor %}
+		    </table>
+		    <br />
+		    <h3>C&C Related IPs</h3>
+		    <br />
+		    <table class="info" border="0">
+		    <tr><th>IP number</th>
+				{% for ip in ips %}
+				    <tr><td>{{ip.ip}}</td></tr>
+				{% endfor %}
+		    </table>
+		    <br />
 		    <h3>Logs</h3>
 		    <br />
 		    <table class="info" border="0">
 		    <tr><th>Date & Time</th><th>Log data</th>
 		    {% for log in logs %}
 		        <tr><td>[{{log.datetime}}]</td><td> {{ log.logdata }}</td></tr>
-        {% endfor %}
+        	{% endfor %}
 		    </table>
         </div>
 	</body>

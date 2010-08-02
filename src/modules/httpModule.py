@@ -177,8 +177,9 @@ class HTTPClientFactory(protocol.ClientFactory):
                 # Could not decode data, maybe not base64 encoded, got response
                 return
             
-            # extract wait grammar for new reconnect interval
+            moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.URL_EVENT, response, self.hash)
             moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, response, self.hash, self.config)
+            # extract wait grammar for new reconnect interval
             try:
                 self.wait = int(response.split(self.config['wait_grammar'])[1].split(self.config['response_separator'])[1])
                 reactor.callLater(self.wait * 60, self.module.startLoop)

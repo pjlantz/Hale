@@ -111,6 +111,10 @@ class IRCProtocol(Protocol):
         """
         
         checkHost = data.split(':')[1].split(' ')[0].strip()
+        match = self.factory.expr.findall(checkHost)
+        if match:
+            self.factory.addRelIP(data.split('@')[1].split(' ')[0].strip())
+        self.factory.checkForURL(data)
         
         if data.find(self.factory.config['ping_grammar']) != -1: # ping
             self.transport.write(self.factory.config['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # send pong
@@ -136,15 +140,11 @@ class IRCProtocol(Protocol):
                 if not data.find(self.factory.config['time_grammar']) != -1:
                     self.factory.putLog(data)
         else: # unrecognized commands
-            self.expr = re.compile('!~.*?@')
-            match = self.expr.findall(checkHost)
             if match:
                 grammars = self.factory.config.values()
                 command = data.split(':')[1].split(' ')[1]
                 if command not in grammars:
                     self.factory.putLog(data)
-	      
-        #urlHandler.URLHandler(self.factory.config, data).start() # TODO without threads
         
 class IRCClientFactory(ClientFactory):
     """
@@ -159,12 +159,32 @@ class IRCClientFactory(ClientFactory):
         and config to be used
         """
         
+        self.expr = re.compile('!~.*?@')
         self.config = config
         self.firstPing = True
         self.hash = hash
         
     def putLog(self, log):
+        """
+        Put log to the event handler
+        """
+        
         moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, log, self.hash, self.config)
+        
+    def checkForURL(self, data):
+        """
+        Check for URL in the event handler
+        """
+        
+        moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.URL_EVENT, data, self.hash)
+        
+    def addRelIP(self, data):
+        """
+        Put possible ip related to the botnet being monitored
+        in the event handler.
+        """
+        
+        moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.RELIP_EVENT, data, self.hash)
         
     def __call__(self):
         """

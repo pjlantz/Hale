@@ -18,11 +18,10 @@
 #
 ################################################################################
 
-import os, mimetypes
-
+import os, mimetypes, base64, pefile
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from webdb.hale.models import Botnet, Log, Module
+from webdb.hale.models import Botnet, Log, Module, File, RelatedIPs
 from django.template import Context, loader
 from django.contrib.auth import logout
 
@@ -52,11 +51,24 @@ def download(request, filename):
     return response
 
 @login_required
+def file(request, hashvalue):
+    file = File.objects.get(hash=hashvalue)
+    print file
+    content = base64.base64.decode(file.content)
+    ctype, encoding = mimetypes.readfp(content)
+    print pefile.PE(data=content)
+    response = HttpResponse(content)
+    response['Content-Disposition'] = 'attachment; filename='+file.filename
+    return response
+
+@login_required
 def log(request, log_id):
     logs = Log.objects.filter(botnet=log_id)
     botnet = Botnet.objects.get(id=log_id)
+    files = File.objects.filter(botnet=log_id)
+    ips = RelatedIPs.objects.filter(botnet=log_id)
     t = loader.get_template('logs.html')
-    c = Context({'logs': logs, 'botnet': botnet,})
+    c = Context({'logs': logs, 'botnet': botnet, 'files':files, 'ips':ips,})
     return HttpResponse(t.render(c))
     
 @login_required
