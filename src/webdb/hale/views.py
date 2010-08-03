@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-import os, mimetypes, base64, pefile
+import os, mimetypes, base64, datetime
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from webdb.hale.models import Botnet, Log, Module, File, RelatedIPs
@@ -29,8 +29,10 @@ from django.contrib.auth import logout
 def index(request):
     botnets = Botnet.objects.all()
     logs = Log.objects.all()
+    ips = RelatedIPs.objects.all()
+    files = File.objects.all()
     t = loader.get_template('index.html')
-    c = Context({'botnets': botnets, 'logs': logs,})
+    c = Context({'botnets': botnets, 'logs': logs, 'ips': ips, 'files':files,})
     return HttpResponse(t.render(c))
 
 def logoff(request):
@@ -53,11 +55,10 @@ def download(request, filename):
 @login_required
 def file(request, hashvalue):
     file = File.objects.get(hash=hashvalue)
-    print file
-    content = base64.base64.decode(file.content)
-    ctype, encoding = mimetypes.readfp(content)
-    print pefile.PE(data=content)
-    response = HttpResponse(content)
+    content = file.content
+    content = base64.b64decode(content)
+    ctype, encoding = mimetypes.guess_type(file.filename)
+    response = HttpResponse(content, mimetype=ctype)
     response['Content-Disposition'] = 'attachment; filename='+file.filename
     return response
 
@@ -65,10 +66,14 @@ def file(request, hashvalue):
 def log(request, log_id):
     logs = Log.objects.filter(botnet=log_id)
     botnet = Botnet.objects.get(id=log_id)
+    diff = botnet.lastseen - botnet.firstseen
+    uptime = diff.days
+    diff = datetime.datetime.now() - botnet.lastseen
+    lastActivity = diff.days
     files = File.objects.filter(botnet=log_id)
     ips = RelatedIPs.objects.filter(botnet=log_id)
     t = loader.get_template('logs.html')
-    c = Context({'logs': logs, 'botnet': botnet, 'files':files, 'ips':ips,})
+    c = Context({'logs': logs, 'botnet': botnet, 'files':files, 'ips':ips, 'uptime':uptime, 'lastActivity': lastActivity,})
     return HttpResponse(t.render(c))
     
 @login_required

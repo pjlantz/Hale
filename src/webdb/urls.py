@@ -24,7 +24,7 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     (r'^download/(?P<filename>.*)$', 'webdb.hale.views.download'),
-    (r'^file/(?P<hashvalue>)', 'webdb.hale.views.file'),
+    (r'^file/(?P<hashvalue>.*)$', 'webdb.hale.views.file'),
     (r'^hale/$', 'webdb.hale.views.index'),
     (r'^logout/$', 'webdb.hale.views.logoff'),
     (r'^modules/$', 'webdb.hale.views.modules'),

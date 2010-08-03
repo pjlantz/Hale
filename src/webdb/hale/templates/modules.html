@@ -18,7 +18,7 @@
 	    th.links { width:12em; text-align:right; color:#666; padding-right:.5em; }
 	    #links { background:#f6f6f6; margin-left: auto ; margin-right: auto; }
 	    table.center {margin-left:auto; margin-right:auto;}
-	    #chart_div { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
+	    #piechart { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
 	    
 	    table.modules {
 	    	border-width: 0px 0px 0px 0px;
@@ -75,7 +75,7 @@
             counter +=1;
         {% endfor %}
 
-        var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+        var chart = new google.visualization.PieChart(document.getElementById('piechart'));
         chart.draw(data, {backgroundColor: "#eee", title: 'Botnets monitored by specific module'});
       }
     </script>
@@ -97,16 +97,14 @@
 			</table>
 		</div>
 		<br />
-		<br />
-		<br />
 		{% if modules %}
-		<div id="chart_div" style="width: 700px; height: 400px"></div><br />
+		<div id="piechart" style="width: 700px; height: 400px"></div><br />
 		<div id="contents">
 		    {% for module in modules %}
 		        <table class="modules" border="0">
 			        <tr><th>Module</th><th>Configuration example</th></tr>
 			        <td>{{ module.modulename }} [<a href="/download/{{ module.filename }}">Download</a>]</td>
-			        <td>{{ module.confexample|linebreaksbr }}</td>
+			        <td>{{ module.confexample }}</td>
 		        </table>
 		        <br />
 		    {% endfor %}

@@ -27,8 +27,8 @@ class Proxy(models.Model):
     
     host = models.CharField(max_length=32)
     port = models.IntegerField()
-    user = models.CharField(max_length=32)
-    password = models.CharField(max_length=32)
+    user = models.CharField(max_length=32, blank=True)
+    password = models.CharField(max_length=32, blank=True)
 
 class Log(models.Model):
     """
@@ -43,6 +43,11 @@ class Botnet(models.Model):
     """
     Keeps botnet details
     """
+    
+    def getUptimeDays(self):
+        diff = self.lastseen - self.firstseen
+        uptime = diff.days
+        return uptime
     
     # hash value of the unique keys from the config
     botnethashvalue = models.CharField(max_length=32, unique=True)

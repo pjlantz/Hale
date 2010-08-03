@@ -1,6 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-
 <title>Hale - Main</title>
   <head>
     <style type="text/css">
@@ -42,16 +41,26 @@
         var numberOfBotnets = 0;
         {% for botnet in botnets %}
             numberOfBotnets += 1;
-            data.addColumn('number', "{{botnet.botnethashvalue}}" + " " + "{{botnet.host}}");
+            data.addColumn('number', "Botnet id [{{botnet.id}}]");
         {% endfor %}
         
         data.addRows(numberOfBotnets);
         data.setValue(0, 0, '');
         var counter = 1;
+        
         {% for botnet in botnets %}
+            
             var nbr = 0;
             {% for log in logs %}
                 if ({{log.botnet.id}} == {{botnet.id}})
+                    nbr += 1;
+            {% endfor %}
+            {% for ip in ips %}
+                if ({{ip.botnet.id}} == {{botnet.id}})
+                    nbr += 1;
+            {% endfor %}
+            {% for file in files %}
+                if ({{file.botnet.id}} == {{botnet.id}})
                     nbr += 1;
             {% endfor %}
             data.setValue(0, counter, nbr);
@@ -59,7 +68,7 @@
         {% endfor %}
 
         var chart = new google.visualization.ColumnChart(document.getElementById('amountOfLogs'));
-        chart.draw(data, {backgroundColor: "#eee", title: 'Amount of logs for botnet', hAxis: {title: 'Monitored botnets'}});      	
+        chart.draw(data, {backgroundColor: "#eee", title: 'Activity (db entries)', legend: 'none'});      	
       }
 
       function longestTracked() {
@@ -68,24 +77,19 @@
         var numberOfBotnets = 0;
         {% for botnet in botnets %}
             numberOfBotnets += 1;
-            data.addColumn('number', "{{botnet.botnethashvalue}}" + " " + "{{botnet.host}}");
+            data.addColumn('number', "Botnet id [{{botnet.id}}]");
         {% endfor %}
         
         data.addRows(numberOfBotnets);
         data.setValue(0, 0, '');
         var counter = 1;
         {% for botnet in botnets %}
-            var nbr = 0;
-            {% for log in logs %}
-                if ({{log.botnet.id}} == {{botnet.id}})
-                    nbr += 1;
-            {% endfor %}
-            data.setValue(0, counter, nbr);
+            data.setValue(0, counter, {{botnet.getUptimeDays}});
             counter +=1;
         {% endfor %}
 
         var chart = new google.visualization.ColumnChart(document.getElementById('longestTracked'));
-        chart.draw(data, {backgroundColor: "#eee", title: 'Amount of logs for botnet', hAxis: {title: 'Monitored botnets'}}); 
+        chart.draw(data, {backgroundColor: "#eee", title: 'Uptime (days)', legend: 'none'}); 
         
       } 
 
@@ -103,10 +107,14 @@
         {% for botnet in botnets %}
             data.setCell(counter, 0, {{botnet.latitude}});
             data.setCell(counter, 1, {{botnet.longitude}});
-            var hash = "Hash: {{botnet.botnethashvalue}}";
-            var type = "Type: {{botnet.botnettype}}";
-            var host = "Host: {{botnet.host}}";
-            data.setCell(counter, 2, '<div id="info"><p>Hash: {{ botnet.botnethashvalue }}</a></p><p>Type: {{botnet.botnettype}}</p><p>Host: {{botnet.host}}</p><p>[<a href="/log/{{ botnet.id }}/">More info</a>]</p><br/></div>');
+            content = '<div id="info"><p>Hash: {{ botnet.botnethashvalue }}</a></p><p>Type: {{botnet.botnettype}}</p><p>Host: {{botnet.host}}</p><p>ID: {{botnet.id}}</p><p>[<a href="/log/{{ botnet.id }}/">More info</a>]</p><br/></div>';
+            {% for botnet2 in botnets %}
+            	{% if botnet.longitude == botnet2.longitude  and botnet.latitude == botnet2.latitude and botnet.id != botnet2.id %}
+            content += '<div id="info"><p>Hash: {{ botnet2.botnethashvalue }}</a></p><p>Type: {{botnet2.botnettype}}</p><p>Host: {{botnet2.host}}</p><p>ID: {{botnet.id}}</p><p>[<a href="/log/{{ botnet2.id }}/">More info</a>]</p><br/></div>';
+            	{% endif %}
+			{% endfor %}
+
+            data.setCell(counter, 2, content);
             counter += 1;
         {% endfor %}
         var map = new google.visualization.Map(document.getElementById('map'));
@@ -130,8 +138,13 @@
 			</table>
 		</div>
 		<br />
-        <div id="map" style="width: 1400px; height: 600px"></div>
-        <div id="amountOfLogs" style="width: 900px; height: 400px"></div>
-        <div id="longestTracked" style="width: 900px; height: 400px"></div>
+        <table class="charts" border="0"><tr>
+        <td><div id="amountOfLogs" style="width: 900px; height: 400px"></div></td>
+        <td><div id="longestTracked" style="width: 900px; height: 400px"></div></td>
+        </tr>
+        </table>
+        <div id="map" style="width: 1600px; height: 600px"></div>
+        <br />
+        <br />
 	</body>
 </html>
