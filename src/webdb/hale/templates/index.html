@@ -25,6 +25,7 @@
 	    #amountOfLogs { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
 	    #longestTracked { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
 	    #info {width: 300px;}
+	    #titlecenter {border-bottom: 0px none; text-align:center; }
     </style>
 
     <script type="text/javascript" src="http://www.google.com/jsapi"></script>
@@ -43,13 +44,11 @@
             numberOfBotnets += 1;
             data.addColumn('number', "Botnet id [{{botnet.id}}]");
         {% endfor %}
-        
         data.addRows(numberOfBotnets);
         data.setValue(0, 0, '');
         var counter = 1;
         
         {% for botnet in botnets %}
-            
             var nbr = 0;
             {% for log in logs %}
                 if ({{log.botnet.id}} == {{botnet.id}})
@@ -66,7 +65,6 @@
             data.setValue(0, counter, nbr);
             counter +=1;
         {% endfor %}
-
         var chart = new google.visualization.ColumnChart(document.getElementById('amountOfLogs'));
         chart.draw(data, {backgroundColor: "#eee", title: 'Activity (db entries)', legend: 'none'});      	
       }
@@ -79,7 +77,7 @@
             numberOfBotnets += 1;
             data.addColumn('number', "Botnet id [{{botnet.id}}]");
         {% endfor %}
-        
+                data.addColumn('number', "4");
         data.addRows(numberOfBotnets);
         data.setValue(0, 0, '');
         var counter = 1;
@@ -87,7 +85,6 @@
             data.setValue(0, counter, {{botnet.getUptimeDays}});
             counter +=1;
         {% endfor %}
-
         var chart = new google.visualization.ColumnChart(document.getElementById('longestTracked'));
         chart.draw(data, {backgroundColor: "#eee", title: 'Uptime (days)', legend: 'none'}); 
         
@@ -109,8 +106,8 @@
             data.setCell(counter, 1, {{botnet.longitude}});
             content = '<div id="info"><p>Hash: {{ botnet.botnethashvalue }}</a></p><p>Type: {{botnet.botnettype}}</p><p>Host: {{botnet.host}}</p><p>ID: {{botnet.id}}</p><p>[<a href="/log/{{ botnet.id }}/">More info</a>]</p><br/></div>';
             {% for botnet2 in botnets %}
-            	{% if botnet.longitude == botnet2.longitude  and botnet.latitude == botnet2.latitude and botnet.id != botnet2.id %}
-            content += '<div id="info"><p>Hash: {{ botnet2.botnethashvalue }}</a></p><p>Type: {{botnet2.botnettype}}</p><p>Host: {{botnet2.host}}</p><p>ID: {{botnet.id}}</p><p>[<a href="/log/{{ botnet2.id }}/">More info</a>]</p><br/></div>';
+            	{% if botnet.longitude == botnet2.longitude and botnet.latitude == botnet2.latitude and botnet.id != botnet2.id %}
+            content += '<div id="info"><p>Hash: {{ botnet2.botnethashvalue }}</a></p><p>Type: {{botnet2.botnettype}}</p><p>Host: {{botnet2.host}}</p><p>ID: {{botnet2.id}}</p><p>[<a href="/log/{{ botnet2.id }}/">More info</a>]</p><br/></div>';
             	{% endif %}
 			{% endfor %}
 
@@ -133,7 +130,7 @@
 				<tr id="links">
 					<td id="links"><h3>&#187;<a href="/hale/">Overview</a></h3></td>
 					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
-					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form></td>
+					<td id="links"><form method="get" action="/search/"><input name="q" type=text size=30>&nbsp;<input type=Submit value="Search"></form></td>
 				</tr>
 			</table>
 		</div>
@@ -143,6 +140,10 @@
         <td><div id="longestTracked" style="width: 900px; height: 400px"></div></td>
         </tr>
         </table>
+        <div id="titlecenter">
+        	<h3>Botnet C&C location</h3>
+        </div>
+        <br />
         <div id="map" style="width: 1600px; height: 600px"></div>
         <br />
         <br />

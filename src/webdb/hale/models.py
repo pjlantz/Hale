@@ -35,6 +35,15 @@ class Log(models.Model):
     Keeps all logs
     """
     
+    def getYear(self):
+        return self.datetime.year
+    
+    def getMonth(self):
+        return self.datetime.month
+        
+    def getDay(self):
+        return self.datetime.day
+    
     botnet = models.ForeignKey('Botnet')
     datetime = models.DateTimeField(auto_now=True)
     logdata = models.CharField(max_length=1024)
@@ -78,8 +87,18 @@ class RelatedIPs(models.Model):
     botnet
     """
     
+    def getYear(self):
+        return self.datetime.year
+        
+    def getMonth(self):
+        return self.datetime.month
+        
+    def getDay(self):
+        return self.datetime.day
+    
     botnet = models.ForeignKey('Botnet')
     ip = models.IPAddressField(unique=True)
+    datetime = models.DateTimeField(auto_now=True)
 
 class File(models.Model):
     """
@@ -87,8 +106,18 @@ class File(models.Model):
     submitted to together with details about the file
     """
     
+    def getYear(self):
+        return self.datetime.year
+    
+    def getMonth(self):
+        return self.datetime.month
+        
+    def getDay(self):
+        return self.datetime.day
+    
     botnet = models.ForeignKey('Botnet')
     hash = models.CharField(max_length=32, unique=True)
     content = models.TextField()
     filename = models.CharField(max_length=100)
+    datetime = models.DateTimeField(auto_now=True)
     

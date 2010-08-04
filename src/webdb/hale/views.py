@@ -64,8 +64,8 @@ def file(request, hashvalue):
 
 @login_required
 def log(request, log_id):
-    logs = Log.objects.filter(botnet=log_id)
     botnet = Botnet.objects.get(id=log_id)
+    logs = Log.objects.filter(botnet=botnet.id)
     diff = botnet.lastseen - botnet.firstseen
     uptime = diff.days
     diff = datetime.datetime.now() - botnet.lastseen

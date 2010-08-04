@@ -29,6 +29,7 @@ urlpatterns = patterns('',
     (r'^logout/$', 'webdb.hale.views.logoff'),
     (r'^modules/$', 'webdb.hale.views.modules'),
     (r'^log/(?P<log_id>\d+)/$', 'webdb.hale.views.log'),
+    (r'^search/', include('haystack.urls')),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     (r'^admin/', include(admin.site.urls)),
 )

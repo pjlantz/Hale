@@ -45,7 +45,7 @@
 			border-color: gray gray gray gray;	
 	    }
 	    
-	    #content { background:#eee; border-bottom: 0px none;}
+	    #content { border-bottom: 0px none; background:#eee;}
 	    #links ol li { font-family: arial; }
 	    #head { background: #ffc; text-align: center; }
     </style>
@@ -92,7 +92,7 @@
 				<tr id="links">
 					<td id="links"><h3>&#187;<a href="/hale/">Overview</a></h3></td>
 					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
-					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form>
+					<td id="links"><form method="get" action="/search/"><input name="q" type=text size=30>&nbsp;<input type=Submit value="Search"></form></td>
 				</tr>
 			</table>
 		</div>

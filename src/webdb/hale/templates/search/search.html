@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<title>Hale - Main</title>
+  <head>
+    <style type="text/css">
+	    html * { padding:0; margin:0; }
+	    body * { padding:10px 20px; }
+	    body * * { padding:0; }
+		a:link {color: #616D7E; text-decoration: none; }
+		a:visited {color: #616D7E; text-decoration: none; }
+	    body { font:small sans-serif; background:#eee; }
+	    body>div { border-bottom:1px solid #ddd; }
+	    h1 { font-weight:normal; margin-bottom:.4em; }
+	    h1 span { font-size:60%; color:#666; font-weight:normal; }
+	    table.center { border:none; border-collapse: collapse; width:25%; }
+	    td, th { vertical-align:top; padding:2px 3px; }
+	    th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+	    td.links, th.links { vertical-align:top; padding:2px 3px; }
+	    th.links { width:12em; text-align:right; color:#666; padding-right:.5em; }
+	    #links { background:#f6f6f6; margin-left: auto ; margin-right: auto; }
+	    table.center {margin-left:auto; margin-right:auto;}
+	    #links ol li { font-family: arial; }
+	    #head { background: #ffc; text-align: center; }
+	    #result {border-bottom: 0px none; text-align:center; }
+    </style>
+  </head>
+
+	<body>
+		<div id="head">
+			<h1>Hale</h1>
+			<h2>Botnet C&C monitor</h2><br/><h3>&#187;<a href="/logout/">Logout</a></h3>
+		</div>
+		<div id="links">
+			<table class="center" border="0">
+				<tr id="links">
+					<td id="links"><h3>&#187;<a href="/hale/">Overview</a></h3></td>
+					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
+					<td id="links"><form method="get" action="/search/"><input name="q" type=text size=30>&nbsp;<input type=Submit value="Search"></form></td>
+				</tr>
+			</table>
+		</div>
+		<div id="result">
+	        {% if query %}
+	            <h3>Results</h3>
+				<br /><br />
+	            {% for result in page.object_list %}
+	                <p>&#187;
+	                    {% if result.model_name != "botnet" %}
+	                    <b>Hash:</b> {{result.object.botnet.botnethashvalue }} <b>Host:</b> {{result.object.botnet.host }} <b>Type:</b> {{result.object.botnet.botnettype}}
+	                    	[<a href="/log/{{ result.object.botnet.id  }}">More info</a>]
+	                    {% else %}
+	                    <b>Hash:</b> {{result.object.botnethashvalue }} <b>Host:</b> {{result.object.host }} <b>Type:</b> {{result.object.botnettype}}
+	                        [<a href="/log/{{ result.object.id  }}">More Info</a>]
+	                    {% endif %}
+	                </p><br />
+	            {% empty %}
+	                <p>No results found.</p>
+	            {% endfor %}
+	        {% endif %}
+        </div>
+	</body>
+</html>

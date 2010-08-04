@@ -1,0 +1,4 @@
+{{ object.botnethashvalue }}
+{{ object.id }}
+{{ object.host }}
+{{ object.botnettype }}

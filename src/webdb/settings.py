@@ -79,9 +79,15 @@ ROOT_URLCONF = 'webdb.urls'
 
 import os
 templateDir = os.getcwd() + "/hale/templates/"
+indexDir = os.getcwd() + "/hale/webdb/hale/site_index/"
 if os.name == "nt":
     templateDir = templateDir.replace("/", "\\")
+    indexDir = indexDir.replace("/", "\\")
 TEMPLATE_DIRS = (templateDir)
+
+HAYSTACK_SITECONF = 'webdb.search_sites'
+HAYSTACK_SEARCH_ENGINE = 'whoosh'
+HAYSTACK_WHOOSH_PATH = 'whoosh.index'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -92,4 +98,5 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'south',
     'webdb.hale',
+    'haystack',
 )

@@ -45,6 +45,7 @@
 	    #content { background:#eee; border-bottom: 0px none;}
 	    #links ol li { font-family: arial; }
 	    #head { background: #ffc; text-align: center; }
+	    #titlecenter {border-bottom: 0px none; text-align:center; }
 	    #timeline { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
     </style>
         <script type='text/javascript' src='http://www.google.com/jsapi'></script>
@@ -54,21 +55,43 @@
       function drawChart() {
         var data = new google.visualization.DataTable();
         data.addColumn('date', 'Date');
-        data.addColumn('number', 'Sold Pencils');
+        data.addColumn('number', 'Botnet activity (logs)');
         data.addColumn('string', 'title1');
         data.addColumn('string', 'text1');
-        data.addColumn('number', 'Sold Pens');
-        data.addColumn('string', 'title2');
-        data.addColumn('string', 'text2');
-        data.addRows([
-          [new Date(2008, 1 ,1), 30000, undefined, undefined, 40645, undefined, undefined],
-          [new Date(2008, 1 ,2), 14045, undefined, undefined, 20374, undefined, undefined],
-          [new Date(2008, 1 ,3), 55022, undefined, undefined, 50766, undefined, undefined],
-          [new Date(2008, 1 ,4), 75284, undefined, undefined, 14334, 'Out of Stock','Ran out of stock on pens at 4pm'],
-          [new Date(2008, 1 ,5), 41476, 'Bought Pens','Bought 200k pens', 66467, undefined, undefined],
-          [new Date(2008, 1 ,6), 33322, undefined, undefined, 39463, undefined, undefined]
-        ]);
-
+        
+        var nbr = 0;
+        var newDate = true;
+        var previousYear = 2000;
+        var previousMonth = 1;
+        var previousDay = 1;
+   		{% for log in logs %}
+            if (previousYear != {{log.getYear}} || previousMonth != {{log.getMonth}} || previousDay != {{log.getDay}})
+                newDate = true;
+            else
+               newDate = false;
+               
+            if (newDate) {
+	   		    {% for log2 in logs %}
+	                if ({{log.botnet.id}} == {{log2.botnet.id}} && {{log.getYear}} == {{log2.getYear}} && {{log.getMonth}} == {{log2.getMonth}} && {{log.getDay}} == {{log2.getDay}})
+	                    nbr += 1;
+	            {% endfor %}
+                data.addRow([new Date({{log.getYear}}, {{log.getMonth}}-1, {{log.getDay}}), nbr, undefined, undefined]);
+            }
+            previousYear = {{log.getYear}};
+            previousMonth = {{log.getMonth}};
+            previousDay = {{log.getDay}};
+            nbr = 0;
+            file = undefined;
+            title = undefined;
+        {% endfor %}
+        {% for file in files %}
+		    if ({{botnet.id}} == {{file.botnet.id}})
+	  			data.addRow([new Date({{file.getYear}}, {{file.getMonth}}-1, {{file.getDay}}), undefined, "Malware:", "{{file.hash}}"]);
+	    {% endfor %}
+   	    {% for ip in ips %}
+	    	if ({{botnet.id}} == {{ip.botnet.id}})
+	     		data.addRow([new Date({{ip.getYear}}, {{ip.getMonth}}-1, {{ip.getDay}}), undefined, "Detected IP:", "{{ip.ip}}"]);
+	    {% endfor %}
         var chart = new google.visualization.AnnotatedTimeLine(document.getElementById('timeline'));
         chart.draw(data, {displayAnnotations: true});
       }
@@ -85,14 +108,17 @@
 				<tr id="links">
 					<td id="links"><h3>&#187;<a href="/hale/">Overview</a></h3></td>
 					<td id="links"><h3>&#187;<a href="/modules/">Modules</a></h3></td>
-					<td id="links"><form name=metasearch method=POST action=''><input name=keyword type=text size=25>&nbsp;<input type=Submit value="Search"></form>
+					<td id="links"><form method="get" action="/search/"><input name="q" type=text size=30>&nbsp;<input type=Submit value="Search"></form></td>
 				</tr>
 			</table>
 		</div>
 		<br />
+		<div id="titlecenter">
+			<h3>Annotated activity timeline</h3>
+		</div>
+		<div id='timeline' style='width: 1000px; height: 300px;'></div>
 		<br />
 		<br />
-		<div id='timeline' style='width: 700px; height: 240px;'></div>
         <div id="content">
             <h3>Details</h3><br/>
 		    <table class="info" border="0">
@@ -107,9 +133,9 @@
 		    <h3>Malware</h3>
 		    <br />
 		    <table class="info" border="0">
-		    <tr><th>Filename</th><th>Hash</th><th></th></tr>
+		    <tr><th>Filename</th><th>Hash</th><th>Date</th><th></th></tr>
 				{% for file in files %}
-				    <tr><td>{{file.filename}}</td><td>{{file.hash}}</td><td><a href="/file/{{file.hash}}">Download</a></td></tr>
+				    <tr><td>{{file.filename}}</td><td>{{file.hash}}</td><td>{{file.datetime}}</td><td><a href="/file/{{file.hash}}">Download</a></td></tr>
 				{% endfor %}
 		    </table>
 		    <br />
