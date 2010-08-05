@@ -1,6 +1,6 @@
 # Django settings for webdb project.
 
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -70,7 +70,7 @@ TEMPLATE_LOADERS = (
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+#    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
@@ -90,7 +90,7 @@ HAYSTACK_SEARCH_ENGINE = 'whoosh'
 HAYSTACK_WHOOSH_PATH = 'whoosh.index'
 
 OAUTH_AUTH_VIEW = "hale.views.oauth_auth_view"
-OAUTH_CALLBACK_VIEW = "hale.views.oauth_callback_view"
+OAUTH_CALLBACK_VIEW = "hale.views.request_token_ready"
 
 INSTALLED_APPS = (
     'django.contrib.auth',

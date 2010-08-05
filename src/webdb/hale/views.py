@@ -44,20 +44,22 @@ def index(request):
     t = loader.get_template('index.html')
     c = Context({'botnets': botnets, 'logs': logs, 'ips': ips, 'files':files,})
     return HttpResponse(t.render(c))
-    
-@login_required
-def oauth_callback_view(request, token):
-    forms.OAuthAuthenticationForm.get_csrf_signature(settings.SECRET_KEY, token.key)
-    return render_to_response("api/oauth/oauth_auth_done.html", {'request': request, 'token':token, 'csrf_signature': forms.OAuthAuthenticationForm.get_csrf_signature(settings.SECRET_KEY, token.key),})
+
+def request_token_ready(request, token):
+    error = request.GET.get('error', '')
+    ctx = RequestContext(request, {
+        'error' : error,
+        'token' : token})
+    return render_to_response('api/oauth/oauth_auth_done.html', context_instance = ctx)
 
 @login_required   
 def oauth_auth_view(request, token, callback, params):
-    print request
+    print "Auth view"
     form = forms.OAuthAuthenticationForm(initial={
         'oauth_token': token.key,
         'oauth_callback': token.get_callback_url() or callback,
      })
-    return render_to_response('api/oauth/authorize_token.html', {'form':form, 'csrf_signature': forms.OAuthAuthenticationForm.get_csrf_signature(settings.SECRET_KEY, token.key),}, RequestContext(request))
+    return render_to_response('api/oauth/authorize_token.html', {'form':form,}, RequestContext(request))
 
 def logoff(request):
     """
