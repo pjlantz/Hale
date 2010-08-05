@@ -18,16 +18,30 @@
 #
 ################################################################################
 
+from piston.models import Consumer
 from webdb.hale.models import Module, Proxy
 from django.contrib import admin
 
+class ConsumerAdmin(admin.ModelAdmin):
+    """
+    Handle consumer (oauth) administration
+    """
+
 class ModuleAdmin(admin.ModelAdmin):
+    """
+    Handle module administration
+    """
+    
     list_display = ('modulename', 'filename')
     
 class ProxyAdmin(admin.ModelAdmin):
+    """
+    Handle proxy administration
+    """
+    
     list_display = ('host', 'port')
     
 admin.site.register(Module, ModuleAdmin)
 admin.site.register(Proxy, ProxyAdmin)
-
+admin.site.register(Consumer, ConsumerAdmin)
 

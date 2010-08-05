@@ -3,6 +3,10 @@ from haystack import site
 from hale.models import Botnet, File, RelatedIPs
 
 class BotnetIndex(SearchIndex):
+    """
+    Botnet indexing
+    """
+    
     text = CharField(document=True, use_template=True)
     
     def get_queryset(self):
@@ -15,6 +19,10 @@ class BotnetIndex(SearchIndex):
 site.register(Botnet, BotnetIndex)
 
 class FileIndex(SearchIndex):
+    """
+    File indexing (malware)
+    """
+    
     text = CharField(document=True, use_template=True)
     
     def get_queryset(self):
@@ -27,6 +35,10 @@ class FileIndex(SearchIndex):
 site.register(File, FileIndex)
 
 class RelatedIPsIndex(SearchIndex):
+    """
+    IP indexing
+    """
+    
     text = CharField(document=True, use_template=True)
     
     def get_queryset(self):

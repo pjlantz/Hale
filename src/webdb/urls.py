@@ -32,4 +32,5 @@ urlpatterns = patterns('',
     (r'^search/', include('haystack.urls')),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     (r'^admin/', include(admin.site.urls)),
-)
+    (r'^api/', include('webdb.api.urls')),
+)    

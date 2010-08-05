@@ -19,14 +19,24 @@
 ################################################################################
 
 import os, mimetypes, base64, datetime
+from django.conf import settings
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from webdb.hale.models import Botnet, Log, Module, File, RelatedIPs
 from django.template import Context, loader
 from django.contrib.auth import logout
+from django.shortcuts import render_to_response
+from django.template import RequestContext
+
+from piston import forms
 
 @login_required
 def index(request):
+    """
+    Inputs database entries to overview page
+    and render response
+    """
+    
     botnets = Botnet.objects.all()
     logs = Log.objects.all()
     ips = RelatedIPs.objects.all()
@@ -34,8 +44,26 @@ def index(request):
     t = loader.get_template('index.html')
     c = Context({'botnets': botnets, 'logs': logs, 'ips': ips, 'files':files,})
     return HttpResponse(t.render(c))
+    
+@login_required
+def oauth_callback_view(request, token):
+    forms.OAuthAuthenticationForm.get_csrf_signature(settings.SECRET_KEY, token.key)
+    return render_to_response("api/oauth/oauth_auth_done.html", {'request': request, 'token':token, 'csrf_signature': forms.OAuthAuthenticationForm.get_csrf_signature(settings.SECRET_KEY, token.key),})
+
+@login_required   
+def oauth_auth_view(request, token, callback, params):
+    print request
+    form = forms.OAuthAuthenticationForm(initial={
+        'oauth_token': token.key,
+        'oauth_callback': token.get_callback_url() or callback,
+     })
+    return render_to_response('api/oauth/authorize_token.html', {'form':form, 'csrf_signature': forms.OAuthAuthenticationForm.get_csrf_signature(settings.SECRET_KEY, token.key),}, RequestContext(request))
 
 def logoff(request):
+    """
+    Renders logout page
+    """
+    
     logout(request)
     t = loader.get_template('logout.html')
     c = Context({})
@@ -43,6 +71,10 @@ def logoff(request):
     
 @login_required
 def download(request, filename):
+    """
+    Render response for module download
+    """
+    
     filePath = os.getcwd() + "/modules/" + filename
     if os.name == "nt":
         filePath = filePath.replace("/", "\\")
@@ -54,6 +86,10 @@ def download(request, filename):
 
 @login_required
 def file(request, hashvalue):
+    """
+    Render response for malware download
+    """
+    
     file = File.objects.get(hash=hashvalue)
     content = file.content
     content = base64.b64decode(content)
@@ -64,6 +100,11 @@ def file(request, hashvalue):
 
 @login_required
 def log(request, log_id):
+    """
+    Inputs database entries to botnet info page
+    and render response
+    """
+    
     botnet = Botnet.objects.get(id=log_id)
     logs = Log.objects.filter(botnet=botnet.id)
     diff = botnet.lastseen - botnet.firstseen
@@ -78,6 +119,11 @@ def log(request, log_id):
     
 @login_required
 def modules(request):
+    """
+    Inputs database entries to module page
+    and render response
+    """
+    
     modules = Module.objects.all()
     botnets = Botnet.objects.all()
     t = loader.get_template('modules.html')
