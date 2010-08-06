@@ -15,11 +15,10 @@
 	    table.center { border:none; border-collapse: collapse; width:25%; }
 	    td, th { vertical-align:top; padding:2px 3px; }
 	    th { width:12em; text-align:right; color:#666; padding-right:.5em; }
-	    td.links, th.links { vertical-align:top; padding:2px 3px; }
+	    td.links, th.links {  padding:2px 3px; }
 	    th.links { width:12em; text-align:right; color:#666; padding-right:.5em; }
 	    #links { background:#f6f6f6; margin-left: auto ; margin-right: auto; }
 	    table.center {margin-left:auto; margin-right:auto;}
-	    #links ol li { font-family: arial; }
 	    #head { background: #ffc; text-align: center; }
 	    #map { background:#eee; border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
 	    #amountOfLogs { border-bottom: 0px none; margin-left: auto ; margin-right: auto; }
@@ -135,17 +134,21 @@
 			</table>
 		</div>
 		<br />
-        <table class="charts" border="0"><tr>
-        <td><div id="amountOfLogs" style="width: 900px; height: 400px"></div></td>
-        <td><div id="longestTracked" style="width: 900px; height: 400px"></div></td>
-        </tr>
-        </table>
-        <div id="titlecenter">
-        	<h3>Botnet C&C location</h3>
-        </div>
-        <br />
-        <div id="map" style="width: 1600px; height: 600px"></div>
-        <br />
-        <br />
+		{% if botnets %}
+	        <table class="charts" border="0"><tr>
+	        <td><div id="amountOfLogs" style="width: 900px; height: 400px"></div></td>
+	        <td><div id="longestTracked" style="width: 900px; height: 400px"></div></td>
+	        </tr>
+	        </table>
+	        <div id="titlecenter">
+	        	<h3>Botnet C&C location</h3>
+	        </div>
+	        <br />
+	        <div id="map" style="width: 1600px; height: 600px"></div>
+	        <br />
+	        <br />
+		{% else %}
+		    <p>No botnets monitored!</p>
+		{% endif %}
 	</body>
 </html>

@@ -67,7 +67,6 @@ def execute(module, identifier, hash):
         else:
             return
     except Exception:
-        print sys.exc_info()
         print "[ModuleManager]:", sys.exc_info()[1]
         
 def executeExternal(module, identifier, config, hash):

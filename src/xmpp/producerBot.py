@@ -90,6 +90,7 @@ class ProducerBot(object):
         self.currentHash = 0
         self.monitoredBotnets = []
         self.foundTrack = False
+        self.use = xmppConf.get("xmpp", "use")
         self.password = xmppConf.get("xmpp", "password")
         self.server = xmppConf.get("xmpp", "server")
         self.jid = xmppConf.get("xmpp", "jid");
@@ -109,12 +110,21 @@ class ProducerBot(object):
         md5.update(identifier)
         self.id = md5.hexdigest()
         
+    def __useBot(self):
+        """
+        Check if bot should be used
+        """
+        
+        if self.use != "True":
+            return False
+        return True
+        
     def disconnectBot(self, reconnect=False):
         """
         Close connection to XMPP server
         """
         
-        if self.running:
+        if self.__useBot() and self.running:
             self.xmpp.disconnect(reconnect)
         
     def run(self):
@@ -123,8 +133,9 @@ class ProducerBot(object):
         process
         """
 
-        self.xmpp.connect((self.server, int(self.port)))
-        self.xmpp.process()
+        if self.__useBot():
+            self.xmpp.connect((self.server, int(self.port)))
+            self.xmpp.process()
         
     def handleXMPPDisconnected(self, event):
         """
@@ -156,15 +167,16 @@ class ProducerBot(object):
         the botnet. Otherwise True if someone is monitoring.
         """
         
-        msg = 'trackReq ' + botnet
-        self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
-        time.sleep(2)
-        self.currentHash = botnet
-        if self.foundTrack:
-            self.foundTrack = False
-            return True
-        self.monitoredBotnets.append(botnet)
-        return False
+        if self.__useBot():
+            msg = 'trackReq ' + botnet
+            self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
+            time.sleep(2)
+            self.currentHash = botnet
+            if self.foundTrack:
+                self.foundTrack = False
+                return True
+            self.monitoredBotnets.append(botnet)
+            return False
         
     def removeBotnet(self, botnet):
         """
@@ -237,14 +249,16 @@ class ProducerBot(object):
         Sends base64 encoded file and its hash value
         to the share channel 
         """
-    
-        msg = "FileCaptured hash=" + hash# + " " + data
-        self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
+        
+        if self.__useBot():
+            msg = "FileCaptured hash=" + hash# + " " + data
+            self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
         
     def sendLog(self, msg):
         """
         Send logs to the data sharing channel
         """
         
-        self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
+        if self.__useBot():
+            self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
         

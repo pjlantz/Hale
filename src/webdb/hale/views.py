@@ -51,8 +51,7 @@ def request_token_ready(request, token):
         'error' : error,
         'token' : token})
     return render_to_response('api/oauth/oauth_auth_done.html', context_instance = ctx)
-
-@login_required   
+  
 def oauth_auth_view(request, token, callback, params):
     print "Auth view"
     form = forms.OAuthAuthenticationForm(initial={

@@ -76,17 +76,6 @@ class CLI(cmd.Cmd):
         arg3 = configHandler.ConfigHandler().getCurrentHash()
         moduleManager.execute(args[0], args[1], arg3)
         
-    def do_xreload(self, arg):
-        """
-        Reload the XMPP configuration and restart
-        the producer bot
-        """
-        
-        producerBot.ProducerBot().disconnectBot(reconnect=True)
-        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        producerBot.ProducerBot(self.xmppConf)
-        producerBot.ProducerBot().run()
-        
     def do_stop(self, arg):
         """
         Stops a module identified by id
