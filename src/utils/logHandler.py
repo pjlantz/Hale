@@ -18,12 +18,13 @@
 #
 ################################################################################
 
-import sys, pefile, base64
-import re, urllib, hashlib, os, socket
+import sys, pefile, base64, socks
+import re, urllib2, hashlib, os, socket
 from twisted.internet import reactor
+import proxySelector
 from xmpp import producerBot
-from webdb.hale.models import Botnet, Log, File, RelatedIPs
 from django.db import IntegrityError
+from webdb.hale.models import Botnet, Log, File, RelatedIPs
 
 class LogHandler(object):
 
@@ -56,7 +57,7 @@ class LogHandler(object):
         botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
         Log(botnet=botnetobject, logdata=data).save()
         botnetobject.save()
-        
+            
     def putToXMPP(self, data, config, botnethash):
         """
         Tell producer bot to output log message in the
@@ -75,6 +76,10 @@ class CCRelatedIP(object):
         pass
     
     def handleIPs(self, data, botnethash):
+        """
+        Fetch list of ips
+        """
+        
         try:
             ips = socket.gethostbyname_ex(data)
             reactor.callInThread(self.putToDB, ips, botnethash)
@@ -82,6 +87,10 @@ class CCRelatedIP(object):
             return
             
     def putToDB(self, ips, botnethash):
+        """
+        Put the ips found in the db
+        """
+        
         botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
         ips = ips[2]
         for ip in ips:
@@ -102,6 +111,7 @@ class URLCheck(object):
         find urls
         """
         
+        self.prox = proxySelector.ProxySelector()
         self.url_expre = re.compile('((http|https|ftp)://[~@a-zA-Z0-9_\-/\\\.\+:]+)')
         
     def handleData(self, data, botnethash, config):
@@ -118,7 +128,6 @@ class URLCheck(object):
         if match:
             for entry in match:
                 url = entry[0]
-                print url
                 fileposition = url.rfind('/')
                 extfilename = url[fileposition + 1:]
                 pos = url.rfind('.')
@@ -136,9 +145,20 @@ class URLCheck(object):
         save the file into the database
         """
         
-        #proxies = {'http': 'http://174.142.104.57:3128'} # fetch from a list later
-        opener = urllib.FancyURLopener()#proxies)
-        fp = opener.open(url)
+        proxyInfo = self.prox.getRandomProxy()
+        if proxyInfo == None:
+            pass
+        else:
+            if len(proxyInfo['USER']) == 0:
+                socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 1080)
+            else:
+                socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 1080, proxyInfo['USER'], proxyInfo['PASS'])
+            socket.socket = socks.socksocket
+
+        opener = urllib2.build_opener()
+        opener.addheaders = [('User-agent', '')]
+
+        fp =  opener.open(url)
         urlinfo = fp.info()
         if "text/html" in urlinfo['Content-Type']: # no executable
             fp.close()
@@ -152,7 +172,7 @@ class URLCheck(object):
         md5 = hashlib.new('md5')
         hash = md5.update(content)
         fname = md5.hexdigest()
-        filename = "%s-%s" % (fname, extfilename)
+        filename = extfilename
         if os.name == "nt":
             filename = filename.replace("/", "\\")
         if not os.path.exists(filename):

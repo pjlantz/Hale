@@ -27,8 +27,8 @@ from xmpp import producerBot
 from conf import configHandler
 
 import GeoIP
-from webdb.hale.models import Botnet
 from django.db import IntegrityError
+from webdb.hale.models import Botnet
 
 class synchronized(object):
     """ 
@@ -258,7 +258,6 @@ class ModuleCoordinator(threading.Thread):
 	                self.stop(key)
 	                return
         else:
-            # exceptions from non-modules, eg. urlHandler 
             self.bucket.put(exception) # add more detailed info later, like time etc
                
     def getErrors(self):
@@ -273,7 +272,6 @@ class ModuleCoordinator(threading.Thread):
 		        print self.bucket.get_nowait()
         except Queue.Empty:
 		    pass
-
         
     def stop(self, moduleId):
         """

