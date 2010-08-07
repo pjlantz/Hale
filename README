@@ -1,3 +1,11 @@
+Contents
+===========
+[1] INSTALL
+[2] SETUP
+[3] USAGE
+[4] DEV
+
+
 [1] INSTALL
 ===========
 Hale has the following dependencies:
@@ -23,11 +31,11 @@ Additionally the monitor requires a database backend driver corresponding to the
 =========
 * First create a database that will be used by Hale, the database engine can be any of your choice like MySQL, PostgreSQL etc.
 
-* Next step is to install python database backend drivers corresponding to the used server engine.
+* Next step is to install python database backend drivers corresponding to the one used by server engine.
 
 * Edit settings.py in hale/src/webdb/ and set the following configurations in DATABASES: ENGINE, NAME, USER, PASSWORD, HOST, PORT where the engine setting is for example django.db.backends.mysql if your server engine is MySQL. The name setting is the name of your database used when creating it.
 
-* In the webdb directory run the following command: python manage.py syncdb. If you get any errors here it’s most likely that the database settings in settings.py are incorrect. Also set the superuser that will be used when administrating the users.
+* In the webdb directory run the following command: python manage.py syncdb. If you get any errors here its most likely that the database settings in settings.py are incorrect. Also set the superuser that will be used when administrating the users.
 
 * Run python manage.py rebuild_index to let the search engine index first time. This search engine is used by the web ui to find queries.
 
@@ -35,12 +43,10 @@ Additionally the monitor requires a database backend driver corresponding to the
 
 * The runserver command deploys a development server that is not recommended to use public since performance issues arise. Instead deploy the web ui with a web server of your choice. TODO deploying
 
-* Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for setting the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors are done.
+* Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for setting the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
 
 [3] USAGE
 =========
-
-
 To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type help or ? to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
 
 [ircConf] module = irc botnet = irc.freenode.net port = 6667 password = None nick = testjg5534 username = agent007 realname = Spying channel = #testasdf channel_pass = kluczbork pass_grammar = PASS nick_grammar = NICK user_grammar = USER join_grammar = JOIN version_grammar = VERSION time_grammar = TIME privmsg_grammar = PRIVMSG topic_grammar = TOPIC currenttopic_grammar = 332 ping_grammar = PING pong_grammar = PONG
@@ -154,7 +160,7 @@ To get access to the api you need a consumer key and secret key, this can be cre
     /api/type/module will reply with all botnets monitored with the module
     /api/botips/hash will reply with all ips captured by botnet with the value hash
     /api/bologs/hash will reply with all logs for botnet with value hash
-    /api/bofiles/hash will reply with file hashes caputed by botnet with value hash
+    /api/bofiles/hash will reply with file hashes captured by botnet with value hash
     /api/file/hash returns botnet(s) info for those that have captured file with the hash specified
     /api/ip/addr will reply with botnet(s) info for those that have detected an IP with number addr
     
