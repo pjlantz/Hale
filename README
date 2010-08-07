@@ -21,15 +21,21 @@ Additionally the monitor requires a database backend driver corresponding to the
 
 [2] SETUP
 =========
-    * First create a database that will be used by Hale, the database engine can be any of your choice like MySQL, PostgreSQL etc.
-    * Next step is to install python database backend drivers corresponding to the used server engine.
-    * Edit settings.py in hale/src/webdb/ and set the following configurations in DATABASES: ENGINE, NAME, USER, PASSWORD, HOST, PORT where the engine setting is for example django.db.backends.mysql if your server engine is MySQL. The name setting is the name of your database used when creating it.
-    * In the webdb directory run the following command: python manage.py syncdb. If you get any errors here it’s most likely that the database settings in settings.py are incorrect. Also set the superuser that will be used when administrating the users.
-    * Run python manage.py rebuild_index to let the search engine index first time. This search engine is used by the web ui to find queries.
-    * Run__ python manage.py runserver__ and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnet.
-    * The runserver command deploys a development server that is not recommended to use public since performance issues arise. Instead deploy the web ui with a web server of your choice. TODO deploying
+* First create a database that will be used by Hale, the database engine can be any of your choice like MySQL, PostgreSQL etc.
 
-    * Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for setting the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors are done.
+* Next step is to install python database backend drivers corresponding to the used server engine.
+
+* Edit settings.py in hale/src/webdb/ and set the following configurations in DATABASES: ENGINE, NAME, USER, PASSWORD, HOST, PORT where the engine setting is for example django.db.backends.mysql if your server engine is MySQL. The name setting is the name of your database used when creating it.
+
+* In the webdb directory run the following command: python manage.py syncdb. If you get any errors here it’s most likely that the database settings in settings.py are incorrect. Also set the superuser that will be used when administrating the users.
+
+* Run python manage.py rebuild_index to let the search engine index first time. This search engine is used by the web ui to find queries.
+
+* Run python manage.py runserver and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnet.
+
+* The runserver command deploys a development server that is not recommended to use public since performance issues arise. Instead deploy the web ui with a web server of your choice. TODO deploying
+
+* Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for setting the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors are done.
 
 [3] USAGE
 =========
@@ -80,24 +86,13 @@ class IRC(moduleInterface.Module):
    def getConfig(self):
        return self.config
 
-Add decorator for the register function (in this case module_setup)
-which will be called with the current configuration as argument and the
-config hash made of the unique keys. This function can be named anything. 
-Pass along the configurations to the module object, the configHandler 
-catches KeyErrors so if wrong configurations are sent to this function 
-configHandler will notify you about it. 
+Add decorator for the register function (in this case module_setup) which will be called with the current configuration as argument and the config hash made of the unique keys. This function can be named anything. Pass along the configurations to the module object, the configHandler catches KeyErrors so if wrong configurations are sent to this function configHandler will notify you about it. 
 
-Also follow the naming convention nameModule.py and @moduleManager.register("name") 
-and import the moduleManager, if not the moduleManager will notify 
-you about any errors.
+Also follow the naming convention nameModule.py and @moduleManager.register("name") and import the moduleManager, if not the moduleManager will notify you about any errors.
 
-Catch all possible exceptions and send them to the module coordinator
-error bucket which takes care of all errors from every module running 
-in the monitor system. These errors can be shown with the 'showlog' command
-in the CLI
+Catch all possible exceptions and send them to the module coordinator error bucket which takes care of all errors from every module running in the monitor system. These errors can be shown with the 'showlog' command in the CLI.
 
-2) Drag the file to the modules directory. The moduleManager will
-then automatically import it and check for errors.
+2) Drag the file to the modules directory. The moduleManager will then automatically import it and check for errors.
 
 3) In modules.conf edit the configuration, in this case:
 
@@ -147,4 +142,18 @@ Example of acknowledgment:
 startTrackAck hash
 
 if no one else is monitoring this botnet, otherwise a startTrackNack is received if the 
-botnet is already monitored or the sensor does not have the module installed for this botnet 
+botnet is already monitored or the sensor does not have the module installed for this botnet
+
+RESTful Web API:
+
+To get access to the api you need a consumer key and secret key, this can be created by the admin and are used with OAuth to authenticate. The following URLs are available to fetch data in JSON format:
+
+    /api/botnet will reply with all botnets monitored
+    /api/botnet/botnethash will reply with the botnet with hash equal to botnethash
+    /api/host/hostname will reply with all botnets monitored with host equal to hostname
+    /api/type/module will reply with all botnets monitored with the module
+    /api/botips/hash will reply with all ips captured by botnet with the value hash
+    /api/bologs/hash will reply with all logs for botnet with value hash
+    /api/bofiles/hash will reply with file hashes caputed by botnet with value hash
+    /api/file/hash returns botnet(s) info for those that have captured file with the hash specified
+    /api/ip/addr will reply with botnet(s) info for those that have detected an IP with number addr
