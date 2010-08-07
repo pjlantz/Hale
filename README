@@ -1,3 +1,49 @@
+[1] INSTALL
+===========
+Hale has the following dependencies:
+
+Python == 2.6
+Django == 1.2.1
+Twisted == 10.1.0
+GeoIP-Python == 1.2.4 (and GeoIP C lib)
+Whoosh == 0.3.18
+django-haystack == 1.0.1-final
+django-piston == 0.2.3rc1
+pefile == 1.2.10-63
+pyreadline == 1.6.1.dev-r0 (on Windows)
+sleekxmpp == 0.2.3.1
+wsgiref == 0.1.2
+zope.interface == 3.6.1
+oauth2 == 1.2.0
+httplib2 == 0.6.0
+
+Additionally the monitor requires a database backend driver corresponding to the database used by django. When these libraries are installed download the source from here and extract it anywhere.
+
+[2] SETUP
+=========
+    * First create a database that will be used by Hale, the database engine can be any of your choice like MySQL, PostgreSQL etc.
+    * Next step is to install python database backend drivers corresponding to the used server engine.
+    * Edit settings.py in hale/src/webdb/ and set the following configurations in DATABASES: ENGINE, NAME, USER, PASSWORD, HOST, PORT where the engine setting is for example django.db.backends.mysql if your server engine is MySQL. The name setting is the name of your database used when creating it.
+    * In the webdb directory run the following command: python manage.py syncdb. If you get any errors here it’s most likely that the database settings in settings.py are incorrect. Also set the superuser that will be used when administrating the users.
+    * Run python manage.py rebuild_index to let the search engine index first time. This search engine is used by the web ui to find queries.
+    * Run__ python manage.py runserver__ and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnet.
+    * The runserver command deploys a development server that is not recommended to use public since performance issues arise. Instead deploy the web ui with a web server of your choice. TODO deploying
+
+    * Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for setting the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors are done.
+
+[3] USAGE
+=========
+
+
+To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type help or ? to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
+
+[ircConf] module = irc botnet = irc.freenode.net port = 6667 password = None nick = testjg5534 username = agent007 realname = Spying channel = #testasdf channel_pass = kluczbork pass_grammar = PASS nick_grammar = NICK user_grammar = USER join_grammar = JOIN version_grammar = VERSION time_grammar = TIME privmsg_grammar = PRIVMSG topic_grammar = TOPIC currenttopic_grammar = 332 ping_grammar = PING pong_grammar = PONG
+
+Edit or create a new config by specifying a new uniquely named section ([ircConf] part). At the top of the conf file there is a section called uniqueKeys where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run useconf section to load the configuration and then fire up the bot with exec modulename id where id is set by you to identify the botnet.
+
+
+[4] DEV
+=======
 How to add modules, the current module API work as follow:
 
 1) Implement module, for example:
