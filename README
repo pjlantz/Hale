@@ -157,3 +157,5 @@ To get access to the api you need a consumer key and secret key, this can be cre
     /api/bofiles/hash will reply with file hashes caputed by botnet with value hash
     /api/file/hash returns botnet(s) info for those that have captured file with the hash specified
     /api/ip/addr will reply with botnet(s) info for those that have detected an IP with number addr
+    
+Note that currently only GET operations are possible.
