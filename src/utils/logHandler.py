@@ -140,9 +140,7 @@ class URLCheck(object):
     def doDownload(self, url, extfilename):
         """
         Download file from captured url and check its
-        PE header when downloaded. TODO: output base 64
-        encode file content to XMPP share channel and 
-        save the file into the database
+        PE header when downloaded.
         """
         
         proxyInfo = self.prox.getRandomProxy()

@@ -199,7 +199,6 @@ class ProducerBot(object):
         channel
         """
         
-        #print message
         channel = str(message['from'])
         if channel.split('/')[1] != self.jid.split('@')[0]:
 	        coordchan = self.coordchannel.split('@')[0]
