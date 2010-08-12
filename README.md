@@ -4,7 +4,7 @@ About
 
 Hale is a botnet command & control monitor/spy with a modular design to easily develop new modules that monitor new protocols used by C&C servers. Hale comes with IRC and HTTP monitors developed with Twisted to handle scalability of a large amount of connections. Theses modules have configurable protocol grammar and bot settings but can also be modified to fit your needs. All captured logs and files are saved to a database and in case of IRC, tracked IP numbers too. 
 
-To hide the location of the operator, connections can be made through SOCKSv5 proxies and this is configurable via the web interface where also all the logs are available to browse together with statistical charts and timelines. The interface was developed with Django and Google Visualization API. Some extras in the web ui are support for a RESTful API with OAuth support and a search engine. Screenshots of the interface are available here: http://www.pjlantz.com/2010/08/web-ui-and-visualization.html.
+To hide the location of the operator, connections can be made through SOCKSv5 proxies and this is configurable via the web interface where also all the logs are available to browse together with statistical charts and timelines. The interface was developed with Django and Google Visualization API. Some extras in the web ui are support for a RESTful API with OAuth support and a search engine. Screenshots of the interface are available [here](http://www.pjlantz.com/2010/08/web-ui-and-visualization.html).
 
 The main idea with Hale is to help botnet hunting and research to collaborate by creating a network of sensors (Hale monitors). To improve this idea a XMPP bot is available to connect to a centralized XMPP server where currently two different grouprooms are used for coordinating between sensors and a room for sharing logs and files. The coordination room makes use of botnet hashes that are made out of the unique keys in the botnet settings, in this way botnets dont have to be monitored simultaneously that have the same hash (identity) and improves utilization. To help 3rd parties to make use of this network, a bot can join the coordination room and ask a sensor to start tracking a botnet if its unknown by sending the configurations for it, also in the share room 3rd party bots can get their hands on logs and files captured by the sensors in realtime. To assist with log history the web API can be used that support GET requests.  
 
@@ -13,20 +13,20 @@ Install
 
 Hale has the following dependencies:
 
-Python == 2.6
-Django == 1.2.1
-Twisted == 10.1.0
-GeoIP-Python == 1.2.4 (and GeoIP C lib)
-Whoosh == 0.3.18
-django-haystack == 1.0.1-final
-django-piston == 0.2.3rc1
-pefile == 1.2.10-63
-pyreadline == 1.6.1.dev-r0 (on Windows)
-sleekxmpp == 0.2.3.1
-wsgiref == 0.1.2
-zope.interface == 3.6.1
-oauth2 == 1.2.0
-httplib2 == 0.6.0
+	Python == 2.6
+	Django == 1.2.1
+	Twisted == 10.1.0
+	GeoIP-Python == 1.2.4 (and GeoIP C lib)
+	Whoosh == 0.3.18
+	django-haystack == 1.0.1-final
+	django-piston == 0.2.3rc1
+	pefile == 1.2.10-63
+	pyreadline == 1.6.1.dev-r0 (on Windows)
+	sleekxmpp == 0.2.3.1
+	wsgiref == 0.1.2
+	zope.interface == 3.6.1
+	oauth2 == 1.2.0
+	httplib2 == 0.6.0
 
 Additionally the monitor requires a database backend driver corresponding to the database used by django. When these libraries are installed download the source from here and extract it anywhere.
 
@@ -37,7 +37,7 @@ Setup
 
 2) Next step is to install python database backend drivers corresponding to the one used by the server engine.
 
-3) Edit settings.py in hale/src/webdb/ and edit the following configurations: ENGINE, NAME, USER, PASSWORD, HOST and PORT where the engine setting is for example django.db.backends.mysql if your server engine is MySQL. The name setting is the name of your database used when creating it.
+3) Edit **`settings.py`** in **`hale/src/webdb/`** and edit the following configurations: ENGINE, NAME, USER, PASSWORD, HOST and PORT where the engine setting is for example **`django.db.backends.mysql`** if your server engine is MySQL. The name setting is the name of your database used when creating it.
 
 4) If you dont want to start your own web ui then skip this step and go to 8). In the webdb directory run the following command: **`python manage.py syncdb`**. If you get any errors here its most likely that the database settings in settings.py are incorrect. Also, during the sync set the superuser that will be used when administrating the users.
 
@@ -47,14 +47,14 @@ Setup
 
 7) The runserver command deploys a development server that is not recommended for public use since performance issues arise. Instead deploy the web ui with a web server of your choice as described here: http://www.djangobook.com/en/beta/chapter21/ for use with Apache.
 
-8) Upload modules that will be used from hale/src/modules/ or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. If you want others to see how to configure this module then copy the corresponding section config located in hale/conf/modules.conf and put it in the textbox, also add the uniqueKeys sections for the module being uploaded.
+8) Upload modules that will be used from **`hale/src/modules/`** or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. If you want others to see how to configure this module then copy the corresponding section config located in **`hale/conf/modules.conf`** and put it in the textbox, also add the **`uniqueKeys`** sections for the module being uploaded.
 
-9) Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
+9) Before running the monitor edit **`hale.conf`** in **`hale/src/conf/`** if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
 
 Usage
 ------------
 
-To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type 'help' or '?' to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
+To start the monitor head to **`hale/src/`** and execute **`python main.py`**. If it fires up with errors then the django **`settings.py`** file is not correctly set or some libraries are missing. When the monitor is running type **`help`** or **`?`** to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the **`hale/src/conf/modules.conf`** file, for example using a irc configuration as follow:
 
 	[ircConf] 
 	module = irc 
@@ -78,7 +78,7 @@ To start the monitor head to hale/src/ and execute python main.py. If it fires u
 	ping_grammar = PING 
 	pong_grammar = PONG
 
-Edit or create a new config by specifying a new uniquely named section ([ircConf] part). At the top of the config file there is a section called uniqueKeys where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run useconf section to load the configuration and then fire up the bot with exec modulename id where id is set by you to identify the botnet.
+Edit or create a new config by specifying a new uniquely named section (**`[ircConf]`** part). At the top of the config file there is a section called **`uniqueKeys`** where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run useconf section to load the configuration and then fire up the bot with exec modulename id where id is set by you to identify the botnet.
 
 The web interface provides access to all captured data in the database which is accessible from the index page. There is also a search function which enables the user to search for botnet and file hashes, related IP numbers, botnet IDs, botnet modules used and botnet hosts. If the user got access to edit proxies or modules then this can be done in the admin section, url to this is http://.../admin. The administrator can set user modes and also add consumers for the web API.
 
@@ -124,9 +124,10 @@ How to add modules, the current module API work as follow:
 
 Add decorator for the register function (in this case module_setup) which will be called with the current configuration as argument and the config hash made of the unique keys. This function can be named anything. Pass along the configurations to the module object, the configHandler catches KeyErrors so if wrong configurations are sent to this function configHandler will notify you about it. 
 
-Also follow the naming convention nameModule.py and @moduleManager.register("name") and import the moduleManager, if not the moduleManager will notify you about any errors.
+Also follow the naming convention **`nameModule.py`** and **`@moduleManager.register("name")`** and import the **`moduleManager`**, if not the moduleManager will notify you about any errors.
 
-The rest of the module code is omitted but should create a twisted factory object and start this with the reactor in the run method, see the existing modules for an example. For tutorials on programming with Twisted, please see http://twistedmatrix.com/trac/wiki/Documentation. There are also some utils to make use of when developing modules, this is done as following:
+The rest of the module code is omitted but should create a twisted factory object and start this with the reactor in the run method, see the existing modules for an example. For tutorials on programming with Twisted, please see [here](http://twistedmatrix.com/trac/wiki/Documentation). There are also some utils to make use of when developing modules, this is done as following:
+
 
 	# import all utils
 	from utils import *
@@ -191,6 +192,7 @@ handling related IPs is done by applying a regular expression to be used for the
 where the regular expression is as follow:
 
 	self.expr = re.compile('!~.*?@')
+
 
 
 2) Drag the file to the modules directory. The moduleManager will then automatically import it and check for errors.
