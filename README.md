@@ -217,7 +217,7 @@ where the regular expression is as follow:
 
 4) Upload the module to the web ui by setting the module name to for example irc, filename ircModule.py and then add a config example for this module.
 
-Feeder bot HOWTO
+XMPP bot HOWTO
 -----------------
 
 When sending a request for a botnet to track the request is made as follow
