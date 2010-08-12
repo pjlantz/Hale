@@ -140,7 +140,7 @@ Socksify:
 # in the constructor create a new proxy object
 self.prox = proxySelector.ProxySelector()
 
-# in the run method add the following after having created the factory method
+# in the run method add the following after having created the factory method.
 proxyInfo = self.prox.getRandomProxy()
     if proxyInfo == None:
         self.connector = reactor.connectTCP(host, port, factory)
@@ -171,9 +171,9 @@ def putLog(self, log):
 # and call it in the protocol class with: self.factory.checkForURL(data)
 def checkForURL(self, data):
     """
-	Check for URL in the event handler
-	"""
-        
+    Check for URL in the event handler
+    """
+    
     moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.URL_EVENT, data, self.hash)
     
 # if you module should detect IP numbers of other bots and herders implement the following method in the factory
@@ -185,7 +185,7 @@ def addRelIP(self, data):
         
     moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.RELIP_EVENT, data, self.hash)
     
-handling related IPs is done by applying a regular expression to be used for the protocol that the module is going to support, in case of irc it looks like this:
+handling related IPs is done by applying a regular expression to be used for the protocol that the module is going to support, in case of irc module, the code looks like this:
 
 checkHost = data.split(':')[1].split(' ')[0].strip()
 match = self.factory.expr.findall(checkHost)
