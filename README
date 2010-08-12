@@ -1,13 +1,23 @@
-Contents:
-===========
-[1] - INSTALL
-[2] - SETUP
-[3] - USAGE
-[4] - DEVELOPMENT
+Content:
+=========
+[1] - ABOUT
+[2] - INSTALL
+[3] - SETUP
+[4] - USAGE
+[5] - DEVELOPMENT
 
 
-[1] - INSTALL
+[1] - ABOUT
 ===========
+
+Hale is a botnet command & control monitor/spy with a modular design to easily develop new modules that monitor new protocols used by C&C servers. Hale comes with IRC and HTTP monitors developed with Twisted to handle scalability of a large amount of connections. Theses modules have configurable protocol grammar and bot settings but can also be modified to fit your needs. All captured logs and files are saved to a database and in case of IRC, tracked IP numbers too. 
+
+To hide the location of the operator, connections can be made through SOCKSv5 proxies and this is configurable via the web interface where also all the logs are available to browse together with statistical charts and timelines. The interface was developed with Django and Google Visualization API. Some extras in the web ui are support for a RESTful API with OAuth support and a search engine. Screenshots of the interface are available here: http://www.pjlantz.com/2010/08/web-ui-and-visualization.html.
+
+The main idea with Hale is to help botnet hunting and research to collaborate by creating a network of sensors (Hale monitors). To improve this idea a XMPP bot is available to connect to a centralized XMPP server where currently two different grouprooms are used for coordinating between sensors and a room for sharing logs and files. The coordination room makes use of botnet hashes that are made out of the unique keys in the botnet settings, in this way botnets dont have to be monitored simultaneously that have the same hash (identity) and improves utilization. To help 3rd parties to make use of this network, a bot can join the coordination room and ask a sensor to start tracking a botnet if its unknown by sending the configurations for it, also in the share room 3rd party bots can get their hands on logs and files captured by the sensors in realtime. To assist with log history the web API can be used that support GET requests.  
+
+[2] - INSTALL
+=============
 Hale has the following dependencies:
 
 Python == 2.6
@@ -27,8 +37,8 @@ httplib2 == 0.6.0
 
 Additionally the monitor requires a database backend driver corresponding to the database used by django. When these libraries are installed download the source from here and extract it anywhere.
 
-[2] - SETUP
-=========
+[3] - SETUP
+===========
 1) First create a database that will be used by Hale, the database engine can be any of your choice. If you are using an existing database then skip this step.
 
 2) Next step is to install python database backend drivers corresponding to the one used by the server engine.
@@ -47,8 +57,8 @@ Additionally the monitor requires a database backend driver corresponding to the
 
 9) Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
 
-[3] - USAGE
-=========
+[4] - USAGE
+===========
 To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type 'help' or '?' to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
 
 [ircConf] 
@@ -77,8 +87,8 @@ Edit or create a new config by specifying a new uniquely named section ([ircConf
 
 The web interface provides access to all captured data in the database which is accessible from the index page. There is also a search function which enables the user to search for botnet and file hashes, related IP numbers, botnet IDs, botnet modules used and botnet hosts. If the user got access to edit proxies or modules then this can be done in the admin section, url to this is http://.../admin. The administrator can set user modes and also add consumers for the web API.
 
-[4] - DEVELOPMENT
-===============
+[5] - DEVELOPMENT
+=================
 How to add modules, the current module API work as follow:
 
 1) Implement module, for example:
@@ -91,7 +101,8 @@ def module_setup(config, hash):
     """
     Function to register modules, simply
     implement this to pass along the config
-    to the module object and return it back
+    and hash to the module object and return 
+    the it back.
     """
     
     return IRC(config, hash)
@@ -119,7 +130,7 @@ Add decorator for the register function (in this case module_setup) which will b
 
 Also follow the naming convention nameModule.py and @moduleManager.register("name") and import the moduleManager, if not the moduleManager will notify you about any errors.
 
-The rest of the module code is omitted but should create a twisted factory object and start this with the reactor. 
+The rest of the module code is omitted but should create a twisted factory object and start this with the reactor. For tutorials on programming with Twisted, please see http://twistedmatrix.com/trac/wiki/Documentation.
 
 2) Drag the file to the modules directory. The moduleManager will then automatically import it and check for errors.
 
@@ -173,7 +184,12 @@ Example of acknowledgment:
 startTrackAck hash
 
 if no one else is monitoring this botnet, otherwise a startTrackNack is received if the 
-botnet is already monitored or the sensor does not have the module installed for this botnet
+botnet is already monitored or the sensor does not have the module installed for this botnet.
+Malware share is done by sensors sending a message like:
+
+FileCaptured hash=353f6650... file content
+
+where the content is Base64 encoded and comes directly after the file hash value.
 
 RESTful Web API:
 

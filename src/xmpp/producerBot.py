@@ -250,7 +250,7 @@ class ProducerBot(object):
         """
         
         if self.__useBot():
-            msg = "FileCaptured hash=" + hash# + " " + data
+            msg = "FileCaptured hash=" + hash + " " + data
             self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
         
     def sendLog(self, msg):
