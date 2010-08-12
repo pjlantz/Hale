@@ -1,14 +1,6 @@
-Content:
-=========
-[1] - ABOUT
-[2] - INSTALL
-[3] - SETUP
-[4] - USAGE
-[5] - DEVELOPMENT
 
-
-[1] - ABOUT
-===========
+About
+------
 
 Hale is a botnet command & control monitor/spy with a modular design to easily develop new modules that monitor new protocols used by C&C servers. Hale comes with IRC and HTTP monitors developed with Twisted to handle scalability of a large amount of connections. Theses modules have configurable protocol grammar and bot settings but can also be modified to fit your needs. All captured logs and files are saved to a database and in case of IRC, tracked IP numbers too. 
 
@@ -16,8 +8,9 @@ To hide the location of the operator, connections can be made through SOCKSv5 pr
 
 The main idea with Hale is to help botnet hunting and research to collaborate by creating a network of sensors (Hale monitors). To improve this idea a XMPP bot is available to connect to a centralized XMPP server where currently two different grouprooms are used for coordinating between sensors and a room for sharing logs and files. The coordination room makes use of botnet hashes that are made out of the unique keys in the botnet settings, in this way botnets dont have to be monitored simultaneously that have the same hash (identity) and improves utilization. To help 3rd parties to make use of this network, a bot can join the coordination room and ask a sensor to start tracking a botnet if its unknown by sending the configurations for it, also in the share room 3rd party bots can get their hands on logs and files captured by the sensors in realtime. To assist with log history the web API can be used that support GET requests.  
 
-[2] - INSTALL
-=============
+Install
+--------------
+
 Hale has the following dependencies:
 
 Python == 2.6
@@ -37,8 +30,9 @@ httplib2 == 0.6.0
 
 Additionally the monitor requires a database backend driver corresponding to the database used by django. When these libraries are installed download the source from here and extract it anywhere.
 
-[3] - SETUP
-===========
+Setup
+------------
+
 1) First create a database that will be used by Hale, the database engine can be any of your choice. If you are using an existing database then skip this step.
 
 2) Next step is to install python database backend drivers corresponding to the one used by the server engine.
@@ -57,8 +51,9 @@ Additionally the monitor requires a database backend driver corresponding to the
 
 9) Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
 
-[4] - USAGE
-===========
+Usage
+------------
+
 To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type 'help' or '?' to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
 
 [ircConf] 
@@ -87,8 +82,9 @@ Edit or create a new config by specifying a new uniquely named section ([ircConf
 
 The web interface provides access to all captured data in the database which is accessible from the index page. There is also a search function which enables the user to search for botnet and file hashes, related IP numbers, botnet IDs, botnet modules used and botnet hosts. If the user got access to edit proxies or modules then this can be done in the admin section, url to this is http://.../admin. The administrator can set user modes and also add consumers for the web API.
 
-[5] - DEVELOPMENT
-=================
+Development
+------------------
+
 How to add modules, the current module API work as follow:
 
 1) Implement module, for example:
