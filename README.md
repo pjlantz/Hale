@@ -56,47 +56,28 @@ Usage
 
 To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type 'help' or '?' to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
 **`
-[ircConf]
-
-module = irc 
-
-botnet = irc.freenode.net 
-
-port = 6667 
-
-password = None 
-
-nick = nickname
-
-username = agent007 
-
-realname = Spying 
-
-channel = #channelname 
-
-channel_pass = somepass 
-
-pass_grammar = PASS 
-
-nick_grammar = NICK 
-
-user_grammar = USER 
-
-join_grammar = JOIN 
-
-version_grammar = VERSION 
-
-time_grammar = TIME 
-
-privmsg_grammar = PRIVMSG 
-
-topic_grammar = TOPIC 
-
-currenttopic_grammar = 332 
-
-ping_grammar = PING 
-
-pong_grammar = PONG`**
+	[ircConf] 
+	module = irc 
+	botnet = irc.freenode.net 
+	port = 6667 
+	password = None 
+	nick = nickname
+	username = agent007 
+	realname = Spying 
+	channel = #channelname 
+	channel_pass = somepass 
+	pass_grammar = PASS 
+	nick_grammar = NICK 
+	user_grammar = USER 
+	join_grammar = JOIN 
+	version_grammar = VERSION 
+	time_grammar = TIME 
+	privmsg_grammar = PRIVMSG 
+	topic_grammar = TOPIC 
+	currenttopic_grammar = 332 
+	ping_grammar = PING 
+	pong_grammar = PONG
+`**
 
 Edit or create a new config by specifying a new uniquely named section ([ircConf] part). At the top of the config file there is a section called uniqueKeys where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run useconf section to load the configuration and then fire up the bot with exec modulename id where id is set by you to identify the botnet.
 
