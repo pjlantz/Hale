@@ -44,7 +44,7 @@ Setup
 
 6) Run **`python manage.py runserver`** and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnets and URLs.
 
-7) The runserver command deploys a development server that is not recommended for public use since performance issues arise. Instead deploy the web ui with a web server of your choice as described here: http://www.djangobook.com/en/beta/chapter21/ for use with Apache.
+7) The runserver command deploys a development server that is not recommended for public use since performance issues arise. Instead deploy the web ui as described [here](http://www.djangobook.com/en/beta/chapter21/) for use with Apache.
 
 8) Upload modules that will be used from **`hale/src/modules/`** or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. If you want others to see how to configure this module then copy the corresponding section config located in **`hale/conf/modules.conf`** and put it in the textbox, also add the **`uniqueKeys`** sections for the module being uploaded.
 
@@ -54,6 +54,9 @@ Usage
 ================================
 
 To start the monitor head to **`hale/src/`** and execute **`python main.py`**. If it fires up with errors then the django **`settings.py`** file is not correctly set or some libraries are missing. When the monitor is running type **`help`** or **`?`** to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the **`hale/src/conf/modules.conf`** file, for example using a irc configuration as follow:
+
+	[uniqueKeys]
+	irc = botnet, *grammar
 
 	[ircConf] 
 	module = irc 
@@ -77,9 +80,9 @@ To start the monitor head to **`hale/src/`** and execute **`python main.py`**. I
 	ping_grammar = PING 
 	pong_grammar = PONG
 
-Edit or create a new config by specifying a new uniquely named section (**`[ircConf]`** part). At the top of the config file there is a section called **`uniqueKeys`** where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run useconf section to load the configuration and then fire up the bot with exec modulename id where id is set by you to identify the botnet.
+Edit or create a new config by specifying a new uniquely named section (**`[ircConf]`** part). At the top of the config file there is a section called **`uniqueKeys`** where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run **`useconf section`** to load the configuration and then fire up the bot with **`exec modulename id`** where id is set by you to identify the botnet.
 
-The web interface provides access to all captured data in the database which is accessible from the index page. There is also a search function which enables the user to search for botnet and file hashes, related IP numbers, botnet IDs, botnet modules used and botnet hosts. If the user got access to edit proxies or modules then this can be done in the admin section, url to this is http://.../admin. The administrator can set user modes and also add consumers for the web API.
+The web interface provides access to all captured data in the database which is accessible from the index page. There is also a search function which enables the user to search for botnet and file hashes, related IP numbers, botnet IDs, botnet modules used and botnet hosts. If the user got access to edit proxies or modules then this can be done in the admin section, url to this is **`http://.../admin`**. The administrator can set user modes and also add consumers for the web API.
 
 Development
 ================================
