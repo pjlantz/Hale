@@ -39,15 +39,15 @@ Setup
 
 3) Edit settings.py in hale/src/webdb/ and edit the following configurations: ENGINE, NAME, USER, PASSWORD, HOST and PORT where the engine setting is for example django.db.backends.mysql if your server engine is MySQL. The name setting is the name of your database used when creating it.
 
-4) If you dont want to start your own web ui then skip this step and go to 8). In the webdb directory run the following command: 'python manage.py syncdb'. If you get any errors here its most likely that the database settings in settings.py are incorrect. Also, during the sync set the superuser that will be used when administrating the users.
+4) If you dont want to start your own web ui then skip this step and go to 8). In the webdb directory run the following command: **`python manage.py syncdb`**. If you get any errors here its most likely that the database settings in settings.py are incorrect. Also, during the sync set the superuser that will be used when administrating the users.
 
-5) Run 'python manage.py rebuild_index' to let the search engine index first time. After this you run update_index instead and should put this as a cron job to update indexes in a regular interval.
+5) Run **`python manage.py rebuild_index`** to let the search engine index first time. After this you run update_index instead and should put this as a cron job to update indexes in a regular interval.
 
-6) Run 'python manage.py runserver' and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnets and URLs.
+6) Run **`python manage.py runserver`** and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnets and URLs.
 
 7) The runserver command deploys a development server that is not recommended for public use since performance issues arise. Instead deploy the web ui with a web server of your choice as described here: http://www.djangobook.com/en/beta/chapter21/ for use with Apache.
 
-8) Upload modules that will be used from hale/src/modules/ or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to 'irc' and the filename to 'ircModule.py'. If you want others to see how to configure this module then copy the corresponding section config located in hale/conf/modules.conf and put it in the textbox, also add the uniqueKeys sections for the module being uploaded.
+8) Upload modules that will be used from hale/src/modules/ or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. If you want others to see how to configure this module then copy the corresponding section config located in hale/conf/modules.conf and put it in the textbox, also add the uniqueKeys sections for the module being uploaded.
 
 9) Before running the monitor edit hale.conf in hale/src/conf/ if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
 
@@ -55,7 +55,7 @@ Usage
 ------------
 
 To start the monitor head to hale/src/ and execute python main.py. If it fires up with errors then the django settings.py file is not correctly set or some libraries are missing. When the monitor is running type 'help' or '?' to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the hale/src/conf/modules.conf file, for example using a irc configuration as follow:
-
+**`
 [ircConf] 
 module = irc 
 botnet = irc.freenode.net 
@@ -76,7 +76,7 @@ privmsg_grammar = PRIVMSG
 topic_grammar = TOPIC 
 currenttopic_grammar = 332 
 ping_grammar = PING 
-pong_grammar = PONG
+pong_grammar = PONG`**
 
 Edit or create a new config by specifying a new uniquely named section ([ircConf] part). At the top of the config file there is a section called uniqueKeys where all unique fields for a module are specified and used to generate the botnet hash, this should usually not be changed to preserve correct botnet tracking. When this is done run useconf section to load the configuration and then fire up the bot with exec modulename id where id is set by you to identify the botnet.
 
