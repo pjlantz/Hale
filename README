@@ -130,7 +130,72 @@ Add decorator for the register function (in this case module_setup) which will b
 
 Also follow the naming convention nameModule.py and @moduleManager.register("name") and import the moduleManager, if not the moduleManager will notify you about any errors.
 
-The rest of the module code is omitted but should create a twisted factory object and start this with the reactor. For tutorials on programming with Twisted, please see http://twistedmatrix.com/trac/wiki/Documentation.
+The rest of the module code is omitted but should create a twisted factory object and start this with the reactor in the run method, see the existing modules for an example. For tutorials on programming with Twisted, please see http://twistedmatrix.com/trac/wiki/Documentation. There are also some utils to make use of when developing modules, this is done as following:
+
+# import all utils
+from utils import *
+
+Socksify:
+
+# in the constructor create a new proxy object
+self.prox = proxySelector.ProxySelector()
+
+# in the run method add the following after having created the factory method
+proxyInfo = self.prox.getRandomProxy()
+    if proxyInfo == None:
+        self.connector = reactor.connectTCP(host, port, factory)
+    else:
+        proxyHost = proxyInfo['HOST']
+        proxyPort = proxyInfo['PORT']
+        proxyUser = proxyInfo['USER']
+        proxyPass = proxyInfo['PASS']
+        socksify = socks5.ProxyClientCreator(reactor, factory)
+        if len(proxyUser) == 0:
+            self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE")
+        else:
+            self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE", proxyUser, proxyPass) 
+            
+            
+Logging:
+
+# in the factory create the following method to handle logs (note that the hash and config must be sent to the factory)
+# and call it in the protocol class with: self.factory.putLog(data)
+def putLog(self, log):
+    """
+    Put log to the event handler
+    """
+        
+    moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.LOG_EVENT, log, self.hash, self.config)
+    
+# apply reg expression to look for URLs containing possible malware
+# and call it in the protocol class with: self.factory.checkForURL(data)
+def checkForURL(self, data):
+    """
+	Check for URL in the event handler
+	"""
+        
+    moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.URL_EVENT, data, self.hash)
+    
+# if you module should detect IP numbers of other bots and herders implement the following method in the factory
+def addRelIP(self, data):
+    """
+    Put possible ip related to the botnet being monitored
+    in the event handler.
+    """
+        
+    moduleCoordinator.ModuleCoordinator().addEvent(moduleCoordinator.RELIP_EVENT, data, self.hash)
+    
+handling related IPs is done by applying a regular expression to be used for the protocol that the module is going to support, in case of irc it looks like this:
+
+checkHost = data.split(':')[1].split(' ')[0].strip()
+match = self.factory.expr.findall(checkHost)
+if match:
+    self.factory.addRelIP(data.split('@')[1].split(' ')[0].strip())
+    
+where the regular expression is as follow:
+
+self.expr = re.compile('!~.*?@')
+
 
 2) Drag the file to the modules directory. The moduleManager will then automatically import it and check for errors.
 
@@ -205,4 +270,4 @@ To get access to the api you need a consumer key and secret key, this can be cre
     http://.../api/file/hash returns botnet(s) info for those that have captured file with the hash specified
     http://.../api/ip/addr will reply with botnet(s) info for those that have detected an IP with number addr
     
-Note that currently only GET operations are possible.
+Note that currently only GET requests are possible.
