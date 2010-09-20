@@ -52,6 +52,15 @@ class CLI(cmd.Cmd):
         """
         
         cmd.Cmd.__init__(self)
+
+        print  " __  __            ___ "            
+        print  "/\ \/\ \          /\_ \\"            
+        print  "\ \ \_\ \     __  \//\ \      __"   
+        print  " \ \  _  \  /'__`\  \ \ \   /'__`\\" 
+        print  "  \ \ \ \ \/\ \L\.\_ \_\ \_/\  __/" 
+        print  "   \ \_\ \_\ \__/.\_\/\____\ \____\\"
+        print  "    \/_/\/_/\/__/\/_/\/____/\/____/"
+
         self.prompt = ">> "
         self.intro = "\nType help or '?' for a list of commands\n"
         moduleManager.handle_modules_onstart()
