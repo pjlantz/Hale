@@ -147,10 +147,10 @@ class URLCheck(object):
         if proxyInfo == None:
             pass
         else:
-            if len(proxyInfo['USER']) == 0:
-                socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 1080)
+            if len(proxyInfo['USER']) == 0: 
+                socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxyInfo['HOST'], proxyInfo['PORT'])
             else:
-                socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 1080, proxyInfo['USER'], proxyInfo['PASS'])
+                socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, proxyInfo['HOST'], proxyInfo['PORT'], proxyInfo['USER'], proxyInfo['PASS'])
             socket.socket = socks.socksocket
 
         opener = urllib2.build_opener()

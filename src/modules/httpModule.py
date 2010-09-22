@@ -57,7 +57,7 @@ class HTTP(moduleInterface.Module):
         """
         
         self.prox = proxySelector.ProxySelector()
-        self.factory = HTTPClientFactory(self, self.hash, self.config)
+        self.factory = HTTPClientFactory(self, self.hash, self.config, self)
         self.host = self.config['botnet']
         self.port = int(self.config['port'])
         self.proxyInfo = self.prox.getRandomProxy()
@@ -127,11 +127,12 @@ class HTTPClientFactory(protocol.ClientFactory):
 
     protocol = HTTPProtocol
 
-    def __init__(self, module, hash, config):
+    def __init__(self, module, hash, config, module):
         """
         Constructor
         """
         
+        self.module = module
         self.hash = hash
         self.config = config
         self.cookies = {}
@@ -189,6 +190,20 @@ class HTTPClientFactory(protocol.ClientFactory):
             except IndexError:
                 # Could not split out wait grammar, maybe base64 decoding is necessary, got response:
                 return
+
+    def clientConnectionFailed(self, connector, reason):
+        """
+        Called on failed connection to server
+        """
+
+        moduleCoordinator.ModuleCoordinator().putError("Error connecting to " + self.config['botnet'], self.module)
+
+    def clientConnectionLost(self, connector, reason):
+        """
+        Called on lost connection to server
+        """
+
+        moduleCoordinator.ModuleCoordinator().putError("Connection lost to " + self.config['botnet'], self.module)
                 
     def __call__(self):
         """

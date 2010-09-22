@@ -53,8 +53,8 @@ class IRC(moduleInterface.Module):
         """
         Start execution
         """
-
-        factory = IRCClientFactory(self.hash, self.config)
+        
+        factory = IRCClientFactory(self.hash, self.config, self)
         host = self.config['botnet']
         port = int(self.config['port'])
         proxyInfo = self.prox.getRandomProxy()
@@ -77,7 +77,6 @@ class IRC(moduleInterface.Module):
         """
 
         self.connector.disconnect()
-        
                 
     def getConfig(self):
         """
@@ -109,7 +108,7 @@ class IRCProtocol(Protocol):
         """
         Data is received
         """
-        
+
         checkHost = data.split(':')[1].split(' ')[0].strip()
         match = self.factory.expr.findall(checkHost)
         if match:
@@ -125,8 +124,10 @@ class IRCProtocol(Protocol):
 				else:
 				    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + '\r\n') # join without pass
 				self.factory.firstPing = False
+
         elif data.find(self.factory.config['topic_grammar']) != -1: # topic
            self.factory.putLog(data)
+
         elif data.find(self.factory.config['currenttopic_grammar']) != -1: # currenttopic
            firstline = data.split('\r\n')[0].split(self.factory.config['nick'])[1].strip()
            chan = firstline.split(' ')[0].strip()
@@ -135,10 +136,12 @@ class IRCProtocol(Protocol):
            setby = secondline.split(' ')[0].strip()
            logmsg = 'CURRENTTOPIC ' + chan + ' ' + topic + ' set by ' + setby
            self.factory.putLog(logmsg)
+
         elif data.find(self.factory.config['privmsg_grammar']) != -1: # privmsg
             if not data.find(self.factory.config['version_grammar']) != -1:
                 if not data.find(self.factory.config['time_grammar']) != -1:
                     self.factory.putLog(data)
+
         else: # unrecognized commands
             if match:
                 grammars = self.factory.config.values()
@@ -153,17 +156,32 @@ class IRCClientFactory(ClientFactory):
 
     protocol = IRCProtocol # tell base class what proto to build
 
-    def __init__(self, hash, config):
+    def __init__(self, hash, config, module):
         """
         Constructor, sets first ping received flag
         and config to be used
         """
         
+        self.module = module
         self.expr = re.compile('!~.*?@')
         self.config = config
         self.firstPing = True
         self.hash = hash
-        
+
+    def clientConnectionFailed(self, connector, reason):
+        """
+        Called on failed connection to server
+        """
+
+        moduleCoordinator.ModuleCoordinator().putError("Error connecting to " + self.config['botnet'], self.module)
+
+    def clientConnectionLost(self, connector, reason):
+        """
+        Called on lost connection to server
+        """
+
+        moduleCoordinator.ModuleCoordinator().putError("Connection lost to " + self.config['botnet'], self.module)
+
     def putLog(self, log):
         """
         Put log to the event handler
@@ -195,3 +213,4 @@ class IRCClientFactory(ClientFactory):
         p = self.protocol()
         p.factory = self
         return p
+

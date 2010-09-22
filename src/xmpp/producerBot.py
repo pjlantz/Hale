@@ -184,7 +184,8 @@ class ProducerBot(object):
         monited ones
         """
         
-        self.monitoredBotnets.remove(botnet)
+        if self.__useBot() and self.running:
+            self.monitoredBotnets.remove(botnet)
         
     def getMonitoredBotnets(self):
         """

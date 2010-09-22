@@ -19,7 +19,7 @@
 ################################################################################
 
 import Queue, os
-import threading, time
+import threading, time, datetime
 from utils import logHandler
 from twisted.internet import reactor
 from threading import Lock
@@ -230,6 +230,12 @@ class ModuleCoordinator(threading.Thread):
         conf = self.modules[moduleId].getConfig()
         confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
         coord = self.geo.record_by_name(conf['botnet'])
+        
+        if coord == None:
+            self.putError("Unkown host: " + conf['botnet'])
+            self.modules.pop(moduleId)
+            self.configHashes.pop(moduleId)
+            return
         b = Botnet(botnethashvalue=hash, botnettype=conf['module'], host=conf['botnet'], config=confStr, longitude=coord['longitude'], latitude=coord['latitude'])
         try:
             b.save()
@@ -251,14 +257,16 @@ class ModuleCoordinator(threading.Thread):
         in the CLI
         """
         
+        now = datetime.datetime.now()
+        logMsg = "[" + str(now.date()) + " " + str(now.hour) + ":" + str(now.minute) + ":" + str(now.second) + "]: " + exception
         if module != None:
-	        for key, value in self.modules.items():
-	            if value == module:
-	                self.bucket.put(exception) # add more detailed info later, like time etc
-	                self.stop(key)
-	                return
+            for key, value in self.modules.items():
+                if value == module:
+                    self.bucket.put(logMsg)
+                    self.stop(key)
+                    return
         else:
-            self.bucket.put(exception) # add more detailed info later, like time etc
+            self.bucket.put(logMsg)
                
     def getErrors(self):
         """
@@ -268,10 +276,10 @@ class ModuleCoordinator(threading.Thread):
         """
         
         try:
-		    while True:
-		        print self.bucket.get_nowait()
+            while True:
+                print self.bucket.get_nowait()
         except Queue.Empty:
-		    pass
+	    pass
         
     def stop(self, moduleId):
         """

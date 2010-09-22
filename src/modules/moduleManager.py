@@ -56,19 +56,15 @@ def execute(module, identifier, hash):
         print "[ModuleManager]: No such module " + module
         return
     func = modules[module]
-    try:
-        if configHandler.ConfigHandler().correctConfig(module):
-            confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
-            regmod = func(confCopy, hash)
-            if isinstance(regmod, moduleInterface.Module):
-	            moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash)
-            else:
-                print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
+    if configHandler.ConfigHandler().correctConfig(module):
+        confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
+        regmod = func(confCopy, hash)
+        if isinstance(regmod, moduleInterface.Module):
+	    moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash)
         else:
-            return
-    except Exception:
-        print sys.exc_info()[1]
-        print "[ModuleManager]:", sys.exc_info()[1]
+            print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
+    else:
+        return
         
 def executeExternal(module, identifier, config, hash):
     """
