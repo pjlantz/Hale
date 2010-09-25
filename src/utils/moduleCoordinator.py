@@ -218,17 +218,13 @@ class ModuleCoordinator(threading.Thread):
         monitored = producerBot.ProducerBot().getMonitoredBotnets()
         botnet = moduleExe.getConfig()['botnet']
         if not external:
-            if hash in monitored:
-                print "You are already monitoring this!"
-                return
-            if producerBot.ProducerBot().sendTrackReq(hash):
-                print "Botnet already monitored!"
+            if hash in monitored or producerBot.ProducerBot().sendTrackReq(hash):
+                self.putError("Botnet: " + hash + " already monitored")
                 return
                 
         self.modules[moduleId] = moduleExe
         self.configHashes[moduleId] = hash
         conf = self.modules[moduleId].getConfig()
-        confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
         coord = self.geo.record_by_name(conf['botnet'])
         
         if coord == None:
@@ -236,14 +232,7 @@ class ModuleCoordinator(threading.Thread):
             self.modules.pop(moduleId)
             self.configHashes.pop(moduleId)
             return
-        b = Botnet(botnethashvalue=hash, botnettype=conf['module'], host=conf['botnet'], config=confStr, longitude=coord['longitude'], latitude=coord['latitude'])
-        try:
-            b.save()
-        except IntegrityError:
-            b = Botnet.objects.get(botnethashvalue=hash)
-            b.longitude = coord['longitude']
-            b.latitude = coord['latitude']
-            b.save()
+
         moduleExe.run()
         if self.dispatcherFirstStart:
             Dispatcher().start()
@@ -300,6 +289,18 @@ class ModuleCoordinator(threading.Thread):
         """
         
         return self.modules.keys()
+
+    def getInfo(self, moduleId):
+        """
+        Return hash of botnet monitored by module identified by moduleId
+        """
+
+        try:
+            conf = self.modules[moduleId].getConfig()
+        except KeyError:
+            return ""
+        confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
+        return configHandler.ConfigHandler().getHashFromConfStr(confStr, toDB=False)[0]
         
     def stopAll(self):
         """

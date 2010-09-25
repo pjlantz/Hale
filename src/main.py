@@ -117,6 +117,20 @@ class CLI(cmd.Cmd):
             for ident in idlist:
                 listStr += ident + "\n"
             print listStr
+
+    def do_execinfo(self, arg):
+        """
+        List info about executing module
+        Usage: execinfo id
+        """
+
+        info = moduleCoordinator.ModuleCoordinator().getInfo(arg)
+        if len(info) == 0:
+            print "No such id running"
+            return
+
+        print "\nModule ID\tHash\n=========\t=================\n"
+        print arg + "\t" + info + "\n"
             
     def do_lsconf(self, arg):
         """

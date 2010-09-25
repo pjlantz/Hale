@@ -135,8 +135,8 @@ class ProducerBot(object):
 
         if self.__useBot():
             self.xmpp.connect((self.server, int(self.port)))
-            self.xmpp.process()
-        
+            self.xmpp.process(threaded=True)
+        	
     def handleXMPPDisconnected(self, event):
         """
         Handle disconnected state
@@ -199,7 +199,10 @@ class ProducerBot(object):
         Handles groupchat messages from the coordination
         channel
         """
-        
+
+        if message['subject']:
+            return
+
         channel = str(message['from'])
         if channel.split('/')[1] != self.jid.split('@')[0]:
 	        coordchan = self.coordchannel.split('@')[0]
@@ -218,13 +221,13 @@ class ProducerBot(object):
 	                    self.foundTrack = True
 	            if body[0].strip() == 'sensorLoadReq':
 	                msg = 'sensorLoadAck id=' + self.id + ' queue=' + str(len(self.monitoredBotnets))
-                    self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
+                        self.xmpp.sendMessage(self.coordchannel, msg, None, "groupchat")
                 
     def handleIncomingMessage(self, msg):
         """
         Takes care of incoming private chat messages
         """
-        
+
         if msg['type'] == 'chat':
             body = msg['body'].split(' ')
             toStr = msg['from']
@@ -243,7 +246,7 @@ class ProducerBot(object):
                     self.xmpp.sendMessage(toStr, 'startTrackAck ' + hash, None, "chat")
                 else:
                     self.xmpp.sendMessage(toStr, 'startTrackNack', None, "chat")
-                    
+
     def sendFile(self, data, hash):
         """
         Sends base64 encoded file and its hash value
@@ -251,7 +254,7 @@ class ProducerBot(object):
         """
         
         if self.__useBot():
-            msg = "FileCaptured hash=" + hash + " " + data
+            msg = "fileCaptured hash=" + hash + " " + data
             self.xmpp.sendMessage(self.sharechannel, msg, None, "groupchat")
         
     def sendLog(self, msg):

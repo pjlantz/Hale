@@ -148,6 +148,8 @@ class ConfigHandler(object):
                 return '', moduleError
         dictStr = self.getStrFromDict(dict, True)
         md5 = hashlib.new('md5')
+        if not dictStr:
+            return "", True
         md5.update(dictStr.strip())
         return md5.hexdigest(), moduleError
         
@@ -157,11 +159,12 @@ class ConfigHandler(object):
         on external event
         """
         
-        module = conf['module']
-        from modules import moduleManager
-        if module in moduleManager.get_modules():
-            return False
-        return True
+        if conf:
+            module = conf['module']
+            from modules import moduleManager
+            if module in moduleManager.get_modules():
+                return False
+            return True
         
     def getStrFromDict(self, dict, external=False, toDB=False):
         """
@@ -176,6 +179,8 @@ class ConfigHandler(object):
                 dictStr += key + '=' + dict[key] + ' '
             return dictStr.strip()
         items = None
+        if not dict:
+            return
         if external:
             items = dict.items()
         unique = self.getUniqueKeys(dict['module'].strip(), items)
@@ -198,10 +203,13 @@ class ConfigHandler(object):
             try:
                 value = config.split('=')[1]
             except IndexError:
-                newValue = dict[previousKey].strip()
-                newValue = newValue + ' ' + key.strip()
-                dict[previousKey] = newValue
-                continue
+                try:
+                    newValue = dict[previousKey].strip()
+                    newValue = newValue + ' ' + key.strip()
+                    dict[previousKey] = newValue
+                    continue
+                except KeyError:
+                    return
             previousKey = key
             dict[key] = value.strip()
         return dict

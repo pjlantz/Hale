@@ -21,7 +21,7 @@ Hale has the following dependencies:
 	django-piston == 0.2.3rc1
 	pefile == 1.2.10-63
 	pyreadline == 1.6.1.dev-r0 (on Windows)
-	sleekxmpp == 0.2.3.1
+	sleekxmpp == 0.9Rrc1
 	wsgiref == 0.1.2
 	zope.interface == 3.6.1
 	oauth2 == 1.2.0
@@ -130,12 +130,11 @@ Add decorator for the register function (in this case module_setup) which will b
 Also follow the naming convention **`nameModule.py`** and **`@moduleManager.register("name")`** and import the **`moduleManager`**, if not the moduleManager will notify you about any errors.
 
 The rest of the module code is omitted but should create a twisted factory object and start this with the reactor in the run method, see the existing modules for an example. For tutorials on programming with Twisted, please see [here](http://twistedmatrix.com/trac/wiki/Documentation). There are also some utils to make use of when developing modules, this is done as following:
-
+	
+Socksify:
 
 	# import all utils
 	from utils import *
-	
-	Socksify:
 	
 	# in the constructor create a new proxy object
 	self.prox = proxySelector.ProxySelector()
@@ -153,7 +152,25 @@ The rest of the module code is omitted but should create a twisted factory objec
 	        if len(proxyUser) == 0:
 	            self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE")
 	        else:
-	            self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE", proxyUser, proxyPass) 
+	            self.connector = socksify.connectSocks5Proxy(host, port, proxyHost, proxyPort, "HALE", proxyUser, proxyPass)
+
+Connection errors handling in the factory object:
+
+        def clientConnectionFailed(self, connector, reason):
+    	    """
+	    Called on failed connection to server
+	    """
+
+	    moduleCoordinator.ModuleCoordinator().putError("Error connecting to " + self.config['botnet'], self.module)
+
+	def clientConnectionLost(self, connector, reason):
+	    """
+	    Called on lost connection to server
+	    """
+
+	    moduleCoordinator.ModuleCoordinator().putError("Connection lost to " + self.config['botnet'], self.module)
+
+This will send the errors to the error bucket which is accessible by issuing a **`showlog`** in the CLI.
             
             
 Logging:
@@ -245,7 +262,7 @@ where config is a string representation of the configuration, for example
 	module=irc botnet=irc.freenode.net etc..
 
 The sensor then replies with with an acknowledgement together with the config hash
-which can be used to distringuish the botnet logs from the other logs in the share channel
+which can be used to distinguish the botnet logs from the other logs in the share channel.
 Example of acknowledgment:
 
 	startTrackAck hash
@@ -254,7 +271,7 @@ if no one else is monitoring this botnet, otherwise a startTrackNack is received
 botnet is already monitored or the sensor does not have the module installed for this botnet.
 Malware share is done by sensors sending a message like:
 
-	FileCaptured hash=353f6650... file content
+	fileCaptured hash=353f6650... file content
 
 where the content is Base64 encoded and comes directly after the file hash value.
 

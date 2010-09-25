@@ -18,11 +18,13 @@
 #
 ################################################################################
 
+import GeoIP
 import sys, pefile, base64, socks
 import re, urllib2, hashlib, os, socket
 from twisted.internet import reactor
 import proxySelector
 from xmpp import producerBot
+from conf import configHandler
 from django.db import IntegrityError
 from webdb.hale.models import Botnet, Log, File, RelatedIPs
 
@@ -37,7 +39,10 @@ class LogHandler(object):
         Constructor
         """
         
-        pass
+        geodata = os.getcwd() + "/utils/GeoIP.dat"
+        if os.name == "nt":
+            geodata = geodata.replace("/", "\\")
+        self.geo = GeoIP.open(geodata, GeoIP.GEOIP_STANDARD)
         
     def handleLog(self, data, botnethash, config):
         """
@@ -46,13 +51,24 @@ class LogHandler(object):
         XMPP bot
         """
         
-        reactor.callInThread(self.putToDB, data, botnethash)
+        reactor.callInThread(self.putToDB, data, botnethash, config)
         self.putToXMPP(data, config, botnethash)
             
-    def putToDB(self, data, botnethash):
+    def putToDB(self, data, botnethash, conf):
         """
         Creates new log entry in the database
         """
+
+        confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
+        coord = self.geo.record_by_name(conf['botnet'])
+        b = Botnet(botnethashvalue=botnethash, botnettype=conf['module'], host=conf['botnet'], config=confStr, longitude=coord['longitude'], latitude=coord['latitude'])
+        try:
+            b.save()
+        except IntegrityError:
+            b = Botnet.objects.get(botnethashvalue=botnethash)
+            b.longitude = coord['longitude']
+            b.latitude = coord['latitude']
+            b.save()
         
         botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
         Log(botnet=botnetobject, logdata=data).save()

@@ -57,7 +57,7 @@ class HTTP(moduleInterface.Module):
         """
         
         self.prox = proxySelector.ProxySelector()
-        self.factory = HTTPClientFactory(self, self.hash, self.config, self)
+        self.factory = HTTPClientFactory(self, self.hash, self.config)
         self.host = self.config['botnet']
         self.port = int(self.config['port'])
         self.proxyInfo = self.prox.getRandomProxy()
@@ -127,12 +127,11 @@ class HTTPClientFactory(protocol.ClientFactory):
 
     protocol = HTTPProtocol
 
-    def __init__(self, module, hash, config, module):
+    def __init__(self, module, hash, config):
         """
         Constructor
         """
-        
-        self.module = module
+
         self.hash = hash
         self.config = config
         self.cookies = {}
