@@ -156,8 +156,8 @@ Socksify:
 
 Connection errors handling in the factory object:
 
-        def clientConnectionFailed(self, connector, reason):
-    	    """
+	def clientConnectionFailed(self, connector, reason):
+	    """
 	    Called on failed connection to server
 	    """
 
