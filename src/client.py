@@ -18,14 +18,10 @@
 #
 ################################################################################
 
-import cmd, sys, os, signal
-os.environ["DJANGO_SETTINGS_MODULE"] = "webdb.settings"
-import threading, time
+import xmlrpclib, socket
+import cmd, sys, os, getpass
+
 from conf import configHandler
-from modules import moduleManager
-from utils import moduleCoordinator
-from xmpp import producerBot
-from ConfigParser import *
 
 if os.name == "nt":
     try:
@@ -59,31 +55,39 @@ class CLI(cmd.Cmd):
         print  " \ \  _  \  /'__`\  \ \ \   /'__`\\" 
         print  "  \ \ \ \ \/\ \L\.\_ \_\ \_/\  __/" 
         print  "   \ \_\ \_\ \__/.\_\/\____\ \____\\"
-        print  "    \/_/\/_/\/__/\/_/\/____/\/____/"
+        print  "    \/_/\/_/\/__/\/_/\/____/\/____/\n"
 
         self.prompt = ">> "
         self.intro = "\nType help or '?' for a list of commands\n"
-        moduleManager.handle_modules_onstart()
-        moduleCoordinator.ModuleCoordinator().start()
-        self.xmppConf = configHandler.ConfigHandler().loadXMPPConf()
-        producerBot.ProducerBot(self.xmppConf).run()
-        self.moduleDirChange = ModuleDirChangeThread()
-        self.moduleDirChange.start()
-        self.config = configHandler.ConfigHandler()
-        self.modlist = []
-        
+        self.conf = configHandler.ConfigHandler().loadHaleConf()
+        while True:
+            user = raw_input("login: ")
+            passwd = getpass.getpass(prompt="password: ")
+            host = self.conf.get("client", "server")
+            port = self.conf.get("client", "port")
+            url = "https://" + user + ":" + passwd + "@" + host + ":" + port
+            self.proxy = xmlrpclib.ServerProxy(url)
+            try:
+                self.proxy.auth("")
+            except xmlrpclib.ProtocolError:
+                print "Incorrect login/password\n"
+                continue
+            except socket.error:
+                print "Incorrect login/password\n"
+                continue
+            break
+
     def do_exec(self, arg):
         """
         Execute a module with the current config. 
         Usage: exec modulename identifier
         """
         
-        args = arg.split(' ')
-        if len(args) < 2:
-            print "Usage: exec modulename identifier"
-            return
-        arg3 = configHandler.ConfigHandler().getCurrentHash()
-        moduleManager.execute(args[0], args[1], arg3)
+        try:
+            response = self.proxy.execmod(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
         
     def do_stop(self, arg):
         """
@@ -91,32 +95,33 @@ class CLI(cmd.Cmd):
         Usage: stop id
         """
         
-        moduleCoordinator.ModuleCoordinator().stop(arg)
+        try:
+            response = self.proxy.stopmod(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
     
     def do_lsmod(self, arg):
         """
         List all modules currently installed
         """
         
-        lsStr = "\nInstalled modules\n=================\n"
-        self.modlist = moduleManager.get_modules()
-        for mod in self.modlist:
-            lsStr += mod + "\n"
-        print lsStr
+        try:
+            response = self.proxy.lsmod(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
             
     def do_lsexec(self, arg):
         """
         List all modules being executed at the moment
         """
         
-        idlist = moduleCoordinator.ModuleCoordinator().getAll()
-        if len(idlist) == 0:
-            print "No modules running"
-        else:
-            listStr = "\nModule ID\n=========\n"
-            for ident in idlist:
-                listStr += ident + "\n"
-            print listStr
+        try:
+            response = self.proxy.lsexec(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
 
     def do_execinfo(self, arg):
         """
@@ -124,20 +129,22 @@ class CLI(cmd.Cmd):
         Usage: execinfo id
         """
 
-        info = moduleCoordinator.ModuleCoordinator().getInfo(arg)
-        if len(info) == 0:
-            print "No such id running"
-            return
-
-        print "\nModule ID\tHash\n=========\t=================\n"
-        print arg + "\t" + info + "\n"
+        try:
+            response = self.proxy.execinfo(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
             
     def do_lsconf(self, arg):
         """
         List all configurations
         """
-        
-        self.config.listConf()
+
+        try:
+            response = self.proxy.lsconf(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"        
         
     def do_reload(self, arg):
         """
@@ -145,7 +152,11 @@ class CLI(cmd.Cmd):
         Usage: reload modulename
         """
         
-        moduleManager.reload_module(arg)
+        try:
+            response = self.proxy.reloadmod(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
         
     def do_useconf(self, arg):
         """
@@ -153,7 +164,11 @@ class CLI(cmd.Cmd):
         is empty, current config used is printed out
         """
         
-        self.config.useConf(arg)
+        try:
+            response = self.proxy.useconf(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
         
     
     def default(self, line):
@@ -170,6 +185,30 @@ class CLI(cmd.Cmd):
         """
         
         pass
+
+    def do_showlog(self, arg):
+        """
+        Show recent logs from the monitor
+        and the modules
+        """
+        
+        try:
+            response = self.proxy.showlog(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
+
+    def do_shutdown(self, arg):
+        """
+        Show recent logs from the monitor
+        and the modules
+        """
+        
+        try:
+            response = self.proxy.shutdown(arg)
+            print response
+        except xmlrpclib.ProtocolError:
+            print "Operation denied"
         
     def do_quit(self, arg):
         """
@@ -178,76 +217,18 @@ class CLI(cmd.Cmd):
         
         self.do_exit(arg)
         
-    def do_showlog(self, arg):
-        """
-        Show recent logs from the monitor
-        and the modules
-        """
-        
-        moduleCoordinator.ModuleCoordinator().getErrors()
-        
     def do_exit(self, arg):
         """
         Exit the program gracefully
         """
         
-        print "Shutting down.."
-        self.moduleDirChange.stop()
-        self.moduleDirChange.join()
-        moduleCoordinator.ModuleCoordinator().stopAll()
-        producerBot.ProducerBot().disconnectBot()
+        print "Bye!"
         sys.exit(0)
-        
-class ModuleDirChangeThread(threading.Thread):
-    """
-    This thread call the function 'load_modules'
-    in moduleManager periodically to check for 
-    newly registered modules and modules recently removed
-    """
-
-    def __init__(self):
-        """
-        Constructor, sets continue flag
-        """
-        
-        self.continueThis = True
-        threading.Thread.__init__ (self)
-
-    def run(self):
-        """
-        Handles the call to 'load_modules'
-        """
-        
-        while self.continueThis:
-            moduleManager.load_modules()
-            time.sleep(1)
-            
-    def stop(self):
-        """
-        Mark the continue flag to stop thread
-        """
-        
-        self.continueThis = False
-
-def set_ctrlc_handler(func):
-    """
-    Catch CTRL+C and let the function
-    on_ctrlc take care of it
-    """
-    
-    signal.signal(signal.SIGINT, func)
 
 if __name__ == "__main__":
     """
     Main program starts
     """
-    
-    def on_ctrlc(sig, func=None):
-        """
-        Ignore pressed CTRL+C
-        """
-        pass
 
-    set_ctrlc_handler(on_ctrlc)
     CLI().cmdloop()
-            
+

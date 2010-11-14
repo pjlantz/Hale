@@ -66,18 +66,18 @@ class ConfigHandler(object):
         self.currentSection = ""
         self.current = {}
         
-    def loadXMPPConf(self):
+    def loadHaleConf(self):
         """
-        Load configs for XMPP and return them
+        Load configs for Hale and return them
         """
         
-        self.xmppFile = "conf/hale.conf"
+        self.confFile = "conf/hale.conf"
         if os.name == "nt":
-            self.xmppFile = self.xmppFile.replace("/", "\\")
-        self.xmppConf = ConfigParser()
-        self.xmppConf.read(self.xmppFile)
+            self.confFile = self.xmppFile.replace("/", "\\")
+        self.haleConf = ConfigParser()
+        self.haleConf.read(self.confFile)
         
-        return self.xmppConf
+        return self.haleConf
        
     def listConf(self):
         """
@@ -97,9 +97,8 @@ class ConfigHandler(object):
                         tabs = "\t"
                     lsStr += section + tabs + "[" + self.currentConfig.get(section, "module") + "]\n"
         except Exception:
-            print "[ConfigHandler]:", sys.exc_info()[1]
-            return
-        print lsStr
+            return "[ConfigHandler]:", sys.exc_info()[1]
+        return lsStr
             
     def useConf(self, section):
         """
@@ -108,10 +107,8 @@ class ConfigHandler(object):
         
         if len(section) == 0 or section == 'uniqueKeys':
             if len(self.currentSection) == 0:
-                print "[ConfigHandler]: No config loaded "
-            else:
-                print "[ConfigHandler]: Using " + self.currentSection
-            return
+                return "[ConfigHandler]: No config loaded "
+            return "[ConfigHandler]: Using " + self.currentSection
     
         self.currentConfig = ConfigParser()
         self.currentConfig.read(self.currentConfigFile)
@@ -119,8 +116,7 @@ class ConfigHandler(object):
             for option in self.currentConfig.options(section):
                 self.current[option] = self.currentConfig.get(section, option)
         except NoSectionError:
-            print "[ConfigHandler]: No such config " + section
-            return
+            return "[ConfigHandler]: No such config " + section
     
         try:
             dict = self.current
@@ -129,10 +125,9 @@ class ConfigHandler(object):
             md5.update(dictStr.strip())
             self.currentHash = md5.hexdigest()
         except NoSectionError:
-            print '[ConfigHandler]: uniqueKeys section missing'
-            return
+            return '[ConfigHandler]: uniqueKeys section missing'
         self.currentSection = section
-        print "[ConfigHandler]: Using " + section
+        return "[ConfigHandler]: Using " + section
             
     def getHashFromConfStr(self, confStr, toDB=False):
         """
@@ -264,9 +259,9 @@ class ConfigHandler(object):
                         try:
                             op = self.current[opt]
                         except KeyError:
-                            print "[ConfigHandler]: Current config not for use with " + module
-                            return False
-        return True
+                            error = "[ConfigHandler]: Current config not for use with " + module
+                            return (False, error)
+        return (True, "")
         
     def __striplist(self, l):
         """

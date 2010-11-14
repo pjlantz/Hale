@@ -53,10 +53,10 @@ def execute(module, identifier, hash):
     """
     
     if module not in modules:
-        print "[ModuleManager]: No such module " + module
-        return
+        return "[ModuleManager]: No such module " + module
     func = modules[module]
-    if configHandler.ConfigHandler().correctConfig(module):
+    (correct, errorStr) = configHandler.ConfigHandler().correctConfig(module)
+    if correct:
         confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
         regmod = func(confCopy, hash)
         if isinstance(regmod, moduleInterface.Module):
@@ -64,7 +64,7 @@ def execute(module, identifier, hash):
         else:
             print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
     else:
-        return
+        return errorStr
         
 def executeExternal(module, identifier, config, hash):
     """
@@ -137,10 +137,9 @@ def reload_module(module):
     modfile = module + "Module.py"
     if modfile in errors:
         errors.pop(modfile)
-        return
+        return ""
     elif module not in modules:
-        print "[ModuleManager]: No such module "  + module
-        return
+        return "[ModuleManager]: No such module "  + module
     
     files.remove(module + "Module.py")
     modules.pop(module)

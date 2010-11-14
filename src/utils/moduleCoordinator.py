@@ -264,11 +264,13 @@ class ModuleCoordinator(threading.Thread):
         and the monitor program.
         """
         
+        errors = ""
         try:
             while True:
-                print self.bucket.get_nowait()
+                errors += self.bucket.get_nowait()
         except Queue.Empty:
-	    pass
+	    errors += ""
+        return errors
         
     def stop(self, moduleId):
         """
@@ -276,8 +278,7 @@ class ModuleCoordinator(threading.Thread):
         """
         
         if moduleId not in self.modules.keys():
-            print "No such id running"
-            return
+            return "No such id running"
         producerBot.ProducerBot().removeBotnet(self.configHashes[moduleId])
         self.configHashes.pop(moduleId)
         self.modules[moduleId].stop()
