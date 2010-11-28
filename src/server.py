@@ -22,21 +22,19 @@ import SocketServer
 import BaseHTTPServer
 import SimpleHTTPServer
 import SimpleXMLRPCServer
+import socket, os, base64
+import sys, signal, threading, time
+from OpenSSL import SSL
+
+os.environ["DJANGO_SETTINGS_MODULE"] = "webdb.settings"
+from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 
 from conf import configHandler
 from modules import moduleManager
 from utils import moduleCoordinator
 from xmpp import producerBot
 from ConfigParser import *
-
-import socket, os, base64
-import sys, signal, threading, time
-from OpenSSL import SSL
-
-from django.contrib.auth.models import User
-from django.core.exceptions import ObjectDoesNotExist
-
-os.environ["DJANGO_SETTINGS_MODULE"] = "webdb.settings"
         
 class ModuleDirChangeThread(threading.Thread):
     """
@@ -146,7 +144,7 @@ class SecureXMLRpcRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler):
 
             # shut down the connection
             self.wfile.flush()
-            self.connection.shutdown() # Modified here!
+            self.connection.shutdown()
 
     def authenticate_client(self):
         if self.headers.has_key('Authorization'):
@@ -218,6 +216,7 @@ def main(HandlerClass = SecureXMLRpcRequestHandler,ServerClass = SecureXMLRPCSer
             errorStr = moduleManager.execute(args[0], args[1], arg3)
             if len(errorStr) > 0:
                 return errorStr
+            return arg[1] + " started"
 
         def stopmod(self, arg):
             """
@@ -225,8 +224,9 @@ def main(HandlerClass = SecureXMLRpcRequestHandler,ServerClass = SecureXMLRPCSer
             """
 
             errorStr = moduleCoordinator.ModuleCoordinator().stop(arg)
-            if len(errorStr) > 0:
+            if errorStr != None and len(errorStr) > 0:
                 return errorStr
+            print arg + " is now being stopped"
 
         def lsexec(self, arg):
             """
@@ -267,8 +267,9 @@ def main(HandlerClass = SecureXMLRpcRequestHandler,ServerClass = SecureXMLRPCSer
             """
 
             errorStr = moduleManager.reload_module(arg)
-            if len(errorStr) > 0:
+            if errorStr != None and len(errorStr) > 0:
                 return errorStr
+            return arg + " reloaded"
 
         def useconf(self, arg):
             """
