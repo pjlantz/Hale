@@ -77,7 +77,7 @@ class Module(models.Model):
     
     modulename = models.CharField(max_length=32, unique=True)
     filename = models.CharField(max_length=32)
-    module = models.FileField(upload_to='modules')
+    module = models.FileField(upload_to='modules/')
     # configuration example for this module
     confexample = models.TextField()
     

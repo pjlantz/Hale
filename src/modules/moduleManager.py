@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -47,24 +47,20 @@ def register(module):
         return func
     return registered_module
  
-def execute(module, identifier, hash):
+def execute(module, identifier, config, hash):
     """ 
-    Call this function to execute a module with the configurations 'config'
+    Call this function to execute a module identified by 'identifier' with 
+    the configurations 'config' and config hash 'hash'
     """
     
     if module not in modules:
         return "[ModuleManager]: No such module " + module
     func = modules[module]
-    (correct, errorStr) = configHandler.ConfigHandler().correctConfig(module)
-    if correct:
-        confCopy = copy.copy(configHandler.ConfigHandler().getConfig())
-        regmod = func(confCopy, hash)
-        if isinstance(regmod, moduleInterface.Module):
-	    moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash)
-        else:
-            print "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
+    regmod = func(config, hash)
+    if isinstance(regmod, moduleInterface.Module):
+	moduleCoordinator.ModuleCoordinator().add(regmod, identifier, hash)
     else:
-        return errorStr
+        return "[ModuleManager]: " + module + " is not subclass of moduleInterface.Module"
         
 def executeExternal(module, identifier, config, hash):
     """

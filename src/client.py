@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -60,12 +60,17 @@ class CLI(cmd.Cmd):
         self.prompt = ">> "
         self.intro = "\nType help or '?' for a list of commands\n"
         self.conf = configHandler.ConfigHandler().loadHaleConf()
+        host = self.conf.get("client", "server")
+        port = self.conf.get("client", "port")
+        self.config = configHandler.ConfigHandler()
+
         while True:
-            user = raw_input("login: ")
+            self.user = raw_input("login: ")
             passwd = getpass.getpass(prompt="password: ")
             host = self.conf.get("client", "server")
             port = self.conf.get("client", "port")
-            url = "https://" + user + ":" + passwd + "@" + host + ":" + port
+            url = "http://" + self.user + ":" + passwd + "@" + host + ":" + port
+            self.config = configHandler.ConfigHandler()
             self.proxy = xmlrpclib.ServerProxy(url)
             try:
                 self.proxy.auth("")
@@ -83,8 +88,10 @@ class CLI(cmd.Cmd):
         Usage: exec modulename identifier
         """
         
+        config = self.config.getConfig()
+        configHash = self.config.getCurrentHash()
         try:
-            response = self.proxy.execmod(arg)
+            response = self.proxy.execmod(arg, config, configHash)
             print response
         except xmlrpclib.ProtocolError:
             print "Operation denied"
@@ -140,11 +147,7 @@ class CLI(cmd.Cmd):
         List all configurations
         """
 
-        try:
-            response = self.proxy.lsconf(arg)
-            print response
-        except xmlrpclib.ProtocolError:
-            print "Operation denied"        
+        print self.config.listConf()      
         
     def do_reload(self, arg):
         """
@@ -164,11 +167,7 @@ class CLI(cmd.Cmd):
         is empty, current config used is printed out
         """
         
-        try:
-            response = self.proxy.useconf(arg)
-            print response
-        except xmlrpclib.ProtocolError:
-            print "Operation denied"
+        print self.config.useConf(arg)
         
     
     def default(self, line):
@@ -194,18 +193,6 @@ class CLI(cmd.Cmd):
         
         try:
             response = self.proxy.showlog(arg)
-            print response
-        except xmlrpclib.ProtocolError:
-            print "Operation denied"
-
-    def do_shutdown(self, arg):
-        """
-        Show recent logs from the monitor
-        and the modules
-        """
-        
-        try:
-            response = self.proxy.shutdown(arg)
             print response
         except xmlrpclib.ProtocolError:
             print "Operation denied"

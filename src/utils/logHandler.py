@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -43,6 +43,7 @@ class LogHandler(object):
         if os.name == "nt":
             geodata = geodata.replace("/", "\\")
         self.geo = GeoIP.open(geodata, GeoIP.GEOIP_STANDARD)
+        self.haleConf = configHandler.ConfigHandler().loadHaleConf()
         
     def handleLog(self, data, botnethash, config):
         """
@@ -52,7 +53,8 @@ class LogHandler(object):
         """
         
         reactor.callInThread(self.putToDB, data, botnethash, config)
-        self.putToXMPP(data, config, botnethash)
+        if self.haleConf.get("xmpp", "use") == 'True':
+            self.putToXMPP(data, config, botnethash)
             
     def putToDB(self, data, botnethash, conf):
         """

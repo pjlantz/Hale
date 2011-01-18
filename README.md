@@ -48,12 +48,14 @@ Setup
 
 8) Upload modules that will be used from **`hale/src/modules/`** or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. If you want others to see how to configure this module then copy the corresponding section config located in **`hale/conf/modules.conf`** and put it in the textbox, also add the **`uniqueKeys`** sections for the module being uploaded.
 
-9) Before running the monitor edit **`hale.conf`** in **`hale/src/conf/`** if you wish to use a XMPP server. If not then skip this step. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
+9) Before running the monitor edit **`hale.conf`** in **`hale/src/conf/`** if you wish to use a XMPP server. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
+
+10) Edit **`hale.conf`** and set client and server settings.
 
 Usage
 ================================
 
-To start the monitor head to **`hale/src/`** and execute **`python main.py`**. If it fires up with errors then the django **`settings.py`** file is not correctly set or some libraries are missing. When the monitor is running type **`help`** or **`?`** to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the **`hale/src/conf/modules.conf`** file, for example using a irc configuration as follow:
+To start the monitor head to **`hale/src/`** and execute **`python server.py`**. If it fires up with errors then the django **`settings.py`** file is not correctly set or some libraries are missing. With the client it's possible to issue commands to the server, when the client is running type **`help`** or **`?`** to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the **`hale/src/conf/modules.conf`** file, for example using a irc configuration as follow:
 
 	[uniqueKeys]
 	irc = botnet, *grammar

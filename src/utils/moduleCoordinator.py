@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -21,7 +21,6 @@
 import Queue, os
 import threading, time, datetime
 from utils import logHandler
-from twisted.internet import reactor
 from threading import Lock
 from xmpp import producerBot
 from conf import configHandler
@@ -128,27 +127,6 @@ class EventHolder(object):
         
         return self.config
         
-class Dispatcher(threading.Thread):
-    """
-    Runs the reactor loop outside
-    main thread
-    """
-    
-    def __init__(self):
-        """
-        Constructor
-        """
-        
-        threading.Thread.__init__(self)
-
-    def run(self):
-        """
-        Starts the reactor loop and then this
-        thread finishes
-        """
-        
-        reactor.run(installSignalHandlers=0)
-        
 class ModuleCoordinator(threading.Thread):
     """
     Handles module coordination: starting/stopping
@@ -157,16 +135,16 @@ class ModuleCoordinator(threading.Thread):
     
     __metaclass__ = Singleton
     
-    def __init__(self):
+    def __init__(self, haleConf):
         """
         Constructor, create list to hold modules that are
         running
         """
        
+        self.haleConf = haleConf
         self.configHashes = {}
         self.modules = {}
-        self.dispatcherFirstStart = True
-        self.bucket = Queue.Queue()
+        self.errors = list()
         self.events = list()
         self.runEventListener = True
         self.log = logHandler.LogHandler()
@@ -215,12 +193,13 @@ class ModuleCoordinator(threading.Thread):
             print "[ModuleCoordinator]: Id already used, choose another"
             return
             
-        monitored = producerBot.ProducerBot().getMonitoredBotnets()
-        botnet = moduleExe.getConfig()['botnet']
-        if not external:
-            if hash in monitored or producerBot.ProducerBot().sendTrackReq(hash):
-                self.putError("Botnet: " + hash + " already monitored")
-                return
+        if self.haleConf.get("xmpp", "use") == 'True':
+            monitored = producerBot.ProducerBot().getMonitoredBotnets()
+            botnet = moduleExe.getConfig()['botnet']
+            if not external and monitored != None:
+                if hash in monitored or producerBot.ProducerBot().sendTrackReq(hash):
+                    self.putError("Botnet: " + hash + " already monitored")
+                    return
                 
         self.modules[moduleId] = moduleExe
         self.configHashes[moduleId] = hash
@@ -233,15 +212,12 @@ class ModuleCoordinator(threading.Thread):
             self.configHashes.pop(moduleId)
             return
 
-        moduleExe.run()
-        if self.dispatcherFirstStart:
-            Dispatcher().start()
-            self.dispatcherFirstStart = False                
+        moduleExe.run()              
                 
     @synchronized()
     def putError(self, exception, module=None):
         """
-        Stores an error/exception into the bucket, this
+        Stores an error/exception into the list, this
         will info will be available when issuing a showlog
         in the CLI
         """
@@ -251,25 +227,24 @@ class ModuleCoordinator(threading.Thread):
         if module != None:
             for key, value in self.modules.items():
                 if value == module:
-                    self.bucket.put(logMsg)
+                    self.errors.append(logMsg)
                     self.stop(key)
                     return
         else:
-            self.bucket.put(logMsg)
+            self.errors.append(logMsg)
                
     def getErrors(self):
         """
-        Get error from the exception bucket. This bucket
+        Get error from the exception list. This list
         stores all exceptions from the different modules
         and the monitor program.
         """
         
         errors = ""
-        try:
-            while True:
-                errors += self.bucket.get_nowait()
-        except Queue.Empty:
-	    errors += ""
+        if len(self.errors) == 0:
+            return errors
+        for error in self.errors:
+            errors += error + "\n"
         return errors
         
     def stop(self, moduleId):
@@ -279,7 +254,8 @@ class ModuleCoordinator(threading.Thread):
         
         if moduleId not in self.modules.keys():
             return "No such id running"
-        producerBot.ProducerBot().removeBotnet(self.configHashes[moduleId])
+        if self.haleConf.get("xmpp", "use") == 'True':
+            producerBot.ProducerBot().removeBotnet(self.configHashes[moduleId])
         self.configHashes.pop(moduleId)
         self.modules[moduleId].stop()
         self.modules.pop(moduleId)
@@ -310,8 +286,6 @@ class ModuleCoordinator(threading.Thread):
         
         for ident in self.modules.keys():
             self.modules[ident].stop()
-        if not self.dispatcherFirstStart:
-            reactor.stop()
         self.runEventListener = False
         self.join()
             

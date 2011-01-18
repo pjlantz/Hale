@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -63,7 +63,7 @@ class ConfigHandler(object):
         if os.name == "nt":
             self.currentConfigFile = self.currentConfigFile.replace("/", "\\")
         self.currentConfig.read(self.currentConfigFile)
-        self.currentSection = ""
+        self.currentSection = ''
         self.current = {}
         
     def loadHaleConf(self):
@@ -73,7 +73,7 @@ class ConfigHandler(object):
         
         self.confFile = "conf/hale.conf"
         if os.name == "nt":
-            self.confFile = self.xmppFile.replace("/", "\\")
+            self.confFile = self.confFile.replace("/", "\\")
         self.haleConf = ConfigParser()
         self.haleConf.read(self.confFile)
         
@@ -106,12 +106,13 @@ class ConfigHandler(object):
         """
         
         if len(section) == 0 or section == 'uniqueKeys':
-            if len(self.currentSection) == 0:
+            if self.currentSection == '':
                 return "[ConfigHandler]: No config loaded "
             return "[ConfigHandler]: Using " + self.currentSection
     
         self.currentConfig = ConfigParser()
         self.currentConfig.read(self.currentConfigFile)
+        
         try:
             for option in self.currentConfig.options(section):
                 self.current[option] = self.currentConfig.get(section, option)
