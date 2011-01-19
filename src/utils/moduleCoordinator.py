@@ -174,6 +174,7 @@ class ModuleCoordinator(threading.Thread):
                     self.url.handleData(ev.getData(), ev.getHash(), ev.getConfig())
                 if ev.getType() == RELIP_EVENT:
                     self.relip.handleIPs(ev.getData(), ev.getHash())
+            time.sleep(1)
                 
     def addEvent(self, eventType, data, hash='', config=None):
          """
