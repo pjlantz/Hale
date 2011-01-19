@@ -55,7 +55,7 @@ Setup
 Usage
 ================================
 
-To start the monitor head to **`hale/src/`** and execute **`python server.py`**. If it fires up with errors then the django **`settings.py`** file is not correctly set or some libraries are missing. With the client it's possible to issue commands to the server, when the client is running type **`help`** or **`?`** to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the **`hale/src/conf/modules.conf`** file, for example using a irc configuration as follow:
+To start the monitor head to **`hale/src/`** and execute **`python server.py`**. If it fires up with errors then the django **`settings.py`** file is not correctly set or some libraries are missing. With the client it's possible to issue commands to the server but it requires the user to authenticate himself against the server, access is granted for users that are set as staff members through the web interface. When the client is running type **`help`** or **`?`** to get the available commands. Type help command to get more info about the specific command. Starting up a monitor bot is done by first editing the **`hale/src/conf/modules.conf`** file, for example using a irc configuration as follow:
 
 	[uniqueKeys]
 	irc = botnet, *grammar
