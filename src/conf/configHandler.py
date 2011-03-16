@@ -60,8 +60,6 @@ class ConfigHandler(object):
         self.currentHash = ''
         self.currentConfig = ConfigParser()
         self.currentConfigFile = "conf/modules.conf"
-        if os.name == "nt":
-            self.currentConfigFile = self.currentConfigFile.replace("/", "\\")
         self.currentConfig.read(self.currentConfigFile)
         self.currentSection = ''
         self.current = {}
@@ -72,8 +70,6 @@ class ConfigHandler(object):
         """
         
         self.confFile = "conf/hale.conf"
-        if os.name == "nt":
-            self.confFile = self.confFile.replace("/", "\\")
         self.haleConf = ConfigParser()
         self.haleConf.read(self.confFile)
         

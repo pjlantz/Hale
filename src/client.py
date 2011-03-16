@@ -23,13 +23,6 @@ import cmd, sys, os, getpass
 
 from conf import configHandler
 
-if os.name == "nt":
-    try:
-        import pyreadline
-    except ImportError:
-        print "Error: Windows PyReadline support missing"
-        sys.exit(1)
-
 class CLI(cmd.Cmd):
     """
     Handles command line input with support for 

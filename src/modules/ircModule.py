@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -118,24 +118,32 @@ class IRCProtocol(Protocol):
         if data.find(self.factory.config['ping_grammar']) != -1: # ping
             self.transport.write(self.factory.config['pong_grammar'] + ' ' + data.split()[1] + '\r\n') # send pong
             if self.factory.firstPing:
-				if self.factory.config['channel_pass'] != 'None': # joing with pass
-				    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + ' ' + 
-				    self.factory.config['channel_pass'] + '\r\n')
-				else:
-				    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + '\r\n') # join without pass
-				self.factory.firstPing = False
+                if self.factory.config['channel_pass'] != 'None': # joing with pass
+                    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + ' ' + self.factory.config['channel_pass'] + '\r\n')
+                else:
+                    self.transport.write(self.factory.config['join_grammar'] + ' ' + self.factory.config['channel'] + '\r\n') # join without pass
+                self.factory.firstPing = False
 
         elif data.find(self.factory.config['topic_grammar']) != -1: # topic
            self.factory.putLog(data)
 
         elif data.find(self.factory.config['currenttopic_grammar']) != -1: # currenttopic
-           firstline = data.split('\r\n')[0].split(self.factory.config['nick'])[1].strip()
-           chan = firstline.split(' ')[0].strip()
-           topic = firstline.split(' ')[1].strip()
-           secondline = data.split('\r\n')[1].split(self.factory.config['channel'])[1].strip()
-           setby = secondline.split(' ')[0].strip()
-           logmsg = 'CURRENTTOPIC ' + chan + ' ' + topic + ' set by ' + setby
-           self.factory.putLog(logmsg)
+            firstline = secondline = None
+            chan = topic = setby = ''
+
+            for line in data.split('\r\n'):
+               if not firstline:
+                  firstline = line.split(self.factory.config['nick'])[1].strip()
+                  chan = firstline.split(' ')[0].strip()
+                  topic = firstline.split(' ')[1].strip()
+                  self.factory.putLog("CURRENTTOPIC " + "Channel: " + chan + " Topic: " + topic.split(":")[1])
+                  continue
+               if not secondline:
+                  secondline = line.split(self.factory.config['channel'])[1].strip()
+                  setby = secondline.split(' ')[0].strip()
+                  self.factory.putLog("CURRENTTOPIC " + "Set by: " + setby)
+                  break
+                  
 
         elif data.find(self.factory.config['privmsg_grammar']) != -1: # privmsg
             if not data.find(self.factory.config['version_grammar']) != -1:

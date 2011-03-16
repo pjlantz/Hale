@@ -151,8 +151,6 @@ class ModuleCoordinator(threading.Thread):
         self.url = logHandler.URLCheck()
         self.relip = logHandler.CCRelatedIP()
         geodata = os.getcwd() + "/utils/GeoIP.dat"
-        if os.name == "nt":
-            geodata = geodata.replace("/", "\\")
         self.geo = GeoIP.open(geodata, GeoIP.GEOIP_STANDARD)
         threading.Thread.__init__(self)
         

@@ -33,8 +33,6 @@ imports = {}
 errors = {}
 
 moduleDir = os.getcwd() + "/modules/"
-if os.name == "nt":
-    moduleDir = moduleDir.replace("/", "\\")
 
 def register(module):
     """ 

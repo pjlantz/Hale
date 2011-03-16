@@ -40,8 +40,6 @@ class LogHandler(object):
         """
         
         geodata = os.getcwd() + "/utils/GeoIP.dat"
-        if os.name == "nt":
-            geodata = geodata.replace("/", "\\")
         self.geo = GeoIP.open(geodata, GeoIP.GEOIP_STANDARD)
         self.haleConf = configHandler.ConfigHandler().loadHaleConf()
         
@@ -63,17 +61,18 @@ class LogHandler(object):
 
         confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
         coord = self.geo.record_by_name(conf['botnet'])
-        b = Botnet(botnethashvalue=botnethash, botnettype=conf['module'], host=conf['botnet'], config=confStr, longitude=coord['longitude'], latitude=coord['latitude'])
-        try:
-            b.save()
-        except IntegrityError:
-            b = Botnet.objects.get(botnethashvalue=botnethash)
-            b.longitude = coord['longitude']
-            b.latitude = coord['latitude']
-            b.save()
+
+        (b, created) = Botnet.objects.get_or_create(botnethashvalue = botnethash)
+        if not created:
+            b.botnettype = conf['module']
+            b.host = conf['botnet']
+            b.config = confStr
+        b.longitude = coord['longitude']
+        b.latitude = coord['latitude']
+        b.save()
         
         botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
-        Log(botnet=botnetobject, logdata=data).save()
+        Log(botnet=b, logdata=data).save()
         botnetobject.save()
             
     def putToXMPP(self, data, config, botnethash):
@@ -131,6 +130,7 @@ class URLCheck(object):
         
         self.prox = proxySelector.ProxySelector()
         self.url_expre = re.compile('((http|https|ftp)://[~@a-zA-Z0-9_\-/\\\.\+:]+)')
+        self.haleConf = configHandler.ConfigHandler().loadHaleConf()
         
     def handleData(self, data, botnethash, config):
         """
@@ -174,7 +174,10 @@ class URLCheck(object):
         opener = urllib2.build_opener()
         opener.addheaders = [('User-agent', '')]
 
-        fp =  opener.open(url)
+        try:
+            fp =  opener.open(url)
+        except Exception:
+            return
         urlinfo = fp.info()
         if "text/html" in urlinfo['Content-Type']: # no executable
             fp.close()
@@ -189,8 +192,6 @@ class URLCheck(object):
         hash = md5.update(content)
         fname = md5.hexdigest()
         filename = extfilename
-        if os.name == "nt":
-            filename = filename.replace("/", "\\")
         if not os.path.exists(filename):
             fp = open(filename, 'a+')
             fp.write(content)
@@ -202,7 +203,8 @@ class URLCheck(object):
                 return
             os.remove(filename)
             content = base64.b64encode(content)
-            producerBot.ProducerBot().sendFile(content, fname)
+            if self.haleConf.get("xmpp", "use") == 'True':
+                producerBot.ProducerBot().sendFile(content, fname)
             botnetobject = Botnet.objects.get(botnethashvalue=self.botnethash)
             try:
                 File(botnet=botnetobject, hash=fname, content=content, filename=filename).save()

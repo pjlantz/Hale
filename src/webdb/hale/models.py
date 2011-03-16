@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -77,7 +77,7 @@ class Module(models.Model):
     
     modulename = models.CharField(max_length=32, unique=True)
     filename = models.CharField(max_length=32)
-    module = models.FileField(upload_to='modules/')
+    module = models.FileField()
     # configuration example for this module
     confexample = models.TextField()
     
@@ -102,8 +102,7 @@ class RelatedIPs(models.Model):
 
 class File(models.Model):
     """
-    Holds the file and analysis URL for the sandbox 
-    submitted to together with details about the file
+    Holds uploaded malware thefile
     """
     
     def getYear(self):

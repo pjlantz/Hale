@@ -1,5 +1,5 @@
 ################################################################################
-#   (c) 2010, The Honeynet Project
+#   (c) 2011, The Honeynet Project
 #   Author: Patrik Lantz  patrik@pjlantz.com
 #
 #   This program is free software; you can redistribute it and/or modify
@@ -76,13 +76,11 @@ def download(request, filename):
     Render response for module download
     """
     
-    filePath = os.getcwd() + "/modules/" + filename
-    if os.name == "nt":
-        filePath = filePath.replace("/", "\\")
+    filePath = settings.MEDIA_ROOT + str(filename)
     file = open(filePath)
     ctype, encoding = mimetypes.guess_type(filePath)
     response = HttpResponse(file, mimetype=ctype)
-    response['Content-Disposition'] = 'attachment; filename='+filename
+    response['Content-Disposition'] = 'attachment; filename='+str(filename)
     return response
 
 @login_required
