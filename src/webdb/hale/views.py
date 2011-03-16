@@ -76,8 +76,13 @@ def download(request, filename):
     Render response for module download
     """
     
-    filePath = settings.MEDIA_ROOT + str(filename)
-    file = open(filePath)
+    filePath = settings.MEDIA_ROOT + "/" + str(filename)
+    file = None
+    try:
+        file = open(filePath)
+    except IOError:
+        filePath = settings.MEDIA_ROOT + "/modules/" + str(filename)
+        file = open(filePath)
     ctype, encoding = mimetypes.guess_type(filePath)
     response = HttpResponse(file, mimetype=ctype)
     response['Content-Disposition'] = 'attachment; filename='+str(filename)
