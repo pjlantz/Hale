@@ -15,10 +15,14 @@ DATABASES = {
         'NAME': '',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'HOST': 's',                      # Set to empty string for localhost. Not used with sqlite3.
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
+
+
+# Full path to the Django application
+PATH_TO_APP = '/home/pjlantz/Desktop/Hale/src/webdb'
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -45,7 +49,7 @@ USE_L10N = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/home/pjlantz/Desktop/Hale/src/webdb'
+MEDIA_ROOT = PATH_TO_APP
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -77,15 +81,14 @@ MIDDLEWARE_CLASSES = (
 
 ROOT_URLCONF = 'webdb.urls'
 
-import os
-templateDir = os.getcwd() + "/hale/templates/"
-indexDir = os.getcwd() + "/hale/webdb/hale/site_index/"
+templateDir = PATH_TO_APP + "/hale/templates/"
+indexDir = PATH_TO_APP + "/hale/webdb/hale/site_index/"
     
 TEMPLATE_DIRS = (templateDir)
 
 HAYSTACK_SITECONF = 'webdb.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = 'whoosh.index'
+HAYSTACK_WHOOSH_PATH = PATH_TO_APP + '/whoosh.index'
 
 OAUTH_AUTH_VIEW = "hale.views.oauth_auth_view"
 OAUTH_CALLBACK_VIEW = "hale.views.request_token_ready"

@@ -5,7 +5,7 @@ Hale is a botnet command & control monitor/spy with a modular design to easily d
 
 To hide the location of the operator, connections can be made through SOCKSv5 proxies and this is configurable via the web interface where also all the logs are available to browse together with statistical charts and timelines. The interface was developed with Django and Google Visualization API. Some extras in the web ui are support for a RESTful API with OAuth support and a search engine. Screenshots of the interface are available [here](http://www.pjlantz.com/2010/08/web-ui-and-visualization.html).
 
-The main idea with Hale is to help botnet hunting and research to collaborate by creating a network of sensors (Hale monitors). To improve this idea a XMPP bot is available to connect to a centralized XMPP server where currently two different grouprooms are used for coordinating between sensors and a room for sharing logs and files. The coordination room makes use of botnet hashes that are made out of the unique keys in the botnet settings, in this way botnets dont have to be monitored simultaneously that have the same hash (identity) and improves utilization. To help 3rd parties to make use of this network, a bot can join the coordination room and ask a sensor to start tracking a botnet if its unknown by sending the configurations for it, also in the share room 3rd party bots can get their hands on logs and files captured by the sensors in realtime. To assist with log history the web API can be used that support GET requests.  
+The main idea with Hale is to help botnet hunting and research to collaborate by creating a network of sensors (Hale monitors). To improve this idea, a XMPP bot is available to connect to a centralized XMPP server where currently two different grouprooms are used for coordinating between sensors and a room for sharing logs and files. The coordination room makes use of botnet hashes that are made out of the unique keys in the botnet settings, in this way, two botnets dont have to be monitored simultaneously that have the same hash (identity) and improves utilization. To help 3rd parties to make use of this network, a bot can join the coordination room and ask a sensor to start tracking a botnet if its untracked by sending the configurations for it. Additionally, in the share room, 3rd party bots can get their hands on logs and files captured by the sensors in realtime. To assist with log history the web API can be used that support GET requests.  
 
 Install
 ================================
@@ -20,7 +20,6 @@ Hale has the following dependencies:
 	django-haystack == 1.0.1-final
 	django-piston == 0.2.3rc1
 	pefile == 1.2.10-63
-	pyreadline == 1.6.1.dev-r0 (on Windows)
 	sleekxmpp == 0.9Rrc1
 	wsgiref == 0.1.2
 	zope.interface == 3.6.1
@@ -38,17 +37,32 @@ Setup
 
 3) Edit **`settings.py`** in **`hale/src/webdb/`** and edit the following configurations: ENGINE, NAME, USER, PASSWORD, HOST and PORT where the engine setting is for example **`django.db.backends.mysql`** if your server engine is MySQL. The name setting is the name of your database used when creating it.
 
-4) If you dont want to start your own web ui then skip this step and go to 8). In the webdb directory run the following command: **`python manage.py syncdb`**. If you get any errors here its most likely that the database settings in settings.py are incorrect. Also, during the sync set the superuser that will be used when administrating the users.
+4) If you dont want to start your own web ui then skip this step and go to 8). In **`settings.py`**, change PATH_TO_APP to point to the fullpath of the Django application, for example: **`'/home/..../Hale/src/webdb'`**. In the webdb directory run the following command: **`python manage.py syncdb`**. If you get any errors here its most likely that the database settings in **`settings.py`** are incorrect. Also, during the sync set the superuser that will be used when administrating the users.
 
-5) Run **`python manage.py rebuild_index`** to let the search engine index first time. After this you run update_index instead and should put this as a cron job to update indexes in a regular interval.
+5) To support searching in the web interface, run **`python manage.py rebuild_index`** to let the search engine index first time. This will create a directory named **`whoosh.index/`**, to let the web server write here, issue a **`chmod o+w whoosh.index/`**. After this you run **`python manage.py update_index`** instead and should put this as a cron job to update indexes in a regular interval of your choice. 
 
-6) Run **`python manage.py runserver`** and head to http://127.0.0.1:8000 to check if setup was correctly done. Then go to to http://127.0.0.1/admin and login with your superuser account created before. Create some users if you wish so and then add your proxies. If no proxies are specified then the monitor will connect directly to the botnets and URLs.
+6) Run **`python manage.py runserver`** and head to http://127.0.0.1:8000 to check if setup was correctly done.
 
-7) The runserver command deploys a development server that is not recommended for public use since performance issues arise. Instead deploy the web ui as described [here](http://www.djangobook.com/en/beta/chapter21/) for use with Apache.
+7) The runserver command deploys a development server that is not recommended for production use due to performance issues. Instead deploy the web ui by installing the **`mod_wsgi`** for Apache, assuming you're running Ubuntu, run **`apt-get install libapache2-mod-wsgi`**. In **`/etc/apache2/sites-available/default`** add the following:
 
-8) Upload modules that will be used from **`hale/src/modules/`** or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. If you want others to see how to configure this module then copy the corresponding section config located in **`hale/conf/modules.conf`** and put it in the textbox, also add the **`uniqueKeys`** sections for the module being uploaded.
+    Alias /media /usr/local/lib/python2.6/dist-packages/django/contrib/admin/media/
+    <Location /media>
+      Order allow,deny
+      Allow from all
+    </Location>
 
-9) Before running the monitor edit **`hale.conf`** in **`hale/src/conf/`** if you wish to use a XMPP server. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware sharing will not be possible. The channel settings in hale.conf are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is done.
+
+    WSGIDaemonProcess username processes=2 maximum-requests=500 threads=10
+    WSGIProcessGroup group
+
+    WSGIScriptAlias / /home/..../webdb/django.wsgi
+
+and edit the username and group for which the WSGI daemon should run as. **`WSGIScriptAlias`** should be set to the fullpath to the django.wsgi file located in the **`webdb`** directory. The Alias specified above is needed for the administration page to be rendered correctly. To be able to upload modules through the web interface, issue a **`chmod o+w webdb/modules`**.
+
+
+8) Upload modules that will be used from **`hale/src/modules/`** or write your own (see Development section). Upload the desired module in the admin interface and edit for example the module name to **`irc`** and the filename to **`ircModule.py`**. Specifyc config rules for the module in the corresponding section located in **`hale/conf/modules.conf`** and put it in the textbox, also add the **`uniqueKeys`** sections for the module being uploaded.
+
+9) Before running the monitor edit **`hale.conf`** in **`hale/src/conf/`** if you wish to use a XMPP server. To activate XMPP bot set use setting to True and either edit login info to an existing account and server or start your own XMPP server. An important step when starting up a XMPP server is to increase the max stanza size from the default value to something like 10Mb. Otherwise malware advertisement will not be possible. The channel settings in **`hale.conf`** are used for the share grouproom used by the bot and the coord setting is used for the grouproom where all coordination between sensors is taking place.
 
 10) Edit **`hale.conf`** and set client and server settings.
 
