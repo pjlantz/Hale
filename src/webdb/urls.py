@@ -20,7 +20,7 @@
 
 from django.conf.urls.defaults import *
 from django.contrib import admin
-admin.autodiscover()
+#admin.autodiscover()
 
 urlpatterns = patterns('',
     (r'^download/(?P<filename>.*)$', 'webdb.hale.views.download'),
