@@ -61,14 +61,13 @@ class LogHandler(object):
 
         confStr = configHandler.ConfigHandler().getStrFromDict(conf, toDB=True)
         coord = self.geo.record_by_name(conf['botnet'])
-
-        (b, created) = Botnet.objects.get_or_create(botnethashvalue = botnethash)
+        print "Long: " + str(coord['longitude'])
+        print "Lat: " + str(coord['latitude'])
+        (b, created) = Botnet.objects.get_or_create(botnethashvalue = botnethash, defaults={'longitude': coord['longitude'], 'latitude':coord['latitude']})
         if not created:
             b.botnettype = conf['module']
             b.host = conf['botnet']
             b.config = confStr
-        b.longitude = coord['longitude']
-        b.latitude = coord['latitude']
         b.save()
         
         botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
@@ -108,11 +107,12 @@ class CCRelatedIP(object):
         Put the ips found in the db
         """
         
-        botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
+        (b, created) = Botnet.objects.get_or_create(botnethashvalue = botnethash)
+        #botnetobject = Botnet.objects.get(botnethashvalue=botnethash)
         ips = ips[2]
         for ip in ips:
             try:
-                RelatedIPs(botnet=botnetobject, ip=ip).save()
+                RelatedIPs(botnet=b, ip=ip).save()
             except IntegrityError:
                 pass
         
