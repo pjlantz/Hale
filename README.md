@@ -3,7 +3,7 @@ About
 
 Hale is a botnet command & control monitor/spy with a modular design to easily develop new modules that monitor new protocols used by C&C servers. Hale comes with IRC and HTTP monitors developed with Twisted to handle scalability of a large amount of connections. Theses modules have configurable protocol grammar and bot settings but can also be modified to fit your needs. All captured logs and files are saved to a database and in case of IRC, tracked IP numbers too. 
 
-To hide the location of the operator, connections can be made through SOCKSv5 proxies and this is configurable via the web interface where also all the logs are available to browse together with statistical charts and timelines. The interface was developed with Django and Google Visualization API. Some extras in the web ui are support for a RESTful API with OAuth support and a search engine. Screenshots of the interface are available [here](http://www.pjlantz.com/2010/08/web-ui-and-visualization.html).
+To hide the location of the operator, connections can be made through SOCKSv5 proxies and this is configurable via the web interface where also all the logs are available to browse together with statistical charts and timelines. The interface was developed with Django and Google Visualization API. Some extras in the web ui are support for a RESTful API with OAuth support and a search engine.
 
 The main idea with Hale is to help botnet hunting and research to collaborate by creating a network of sensors (Hale monitors). To improve this idea, a XMPP bot is available to connect to a centralized XMPP server where currently two different grouprooms are used for coordinating between sensors and a room for sharing logs and files. The coordination room makes use of botnet hashes that are made out of the unique keys in the botnet settings, in this way, two botnets dont have to be monitored simultaneously that have the same hash (identity) and improves utilization. To help 3rd parties to make use of this network, a bot can join the coordination room and ask a sensor to start tracking a botnet if its untracked by sending the configurations for it. Additionally, in the share room, 3rd party bots can get their hands on logs and files captured by the sensors in realtime. To assist with log history the web API can be used that support GET requests.  
 
@@ -235,21 +235,21 @@ where the regular expression is as follow:
 
 3) In modules.conf edit the configuration, in this case:
 
-	# specify unique configs for module
-	# a * means that all configs contaning the strings equal to the one 
-	# after the * will be treated as unique. 
-	# in this example all pass_grammar, mode_grammar etc should be 
-	# treated as unique keys
-	[uniqueKeys]
-	irc = botnet, *grammar, ... etc
-	# name a section, can be anything as long as its unique
-	# and add module regname (in this case irc) as module option
-	[myIrcConf]
-	module = irc
-	nick = SpyBot
-	channel = #irc
-	...
-	etc.
+# specify unique configs for module
+# a * means that all configs contaning the strings equal to the one 
+# after the * will be treated as unique. 
+# in this example all pass_grammar, mode_grammar etc should be 
+# treated as unique keys
+[uniqueKeys]
+irc = botnet, *grammar, ... etc
+# name a section, can be anything as long as its unique
+# and add module regname (in this case irc) as module option
+[myIrcConf]
+module = irc
+nick = SpyBot
+channel = #irc
+...
+etc.
 
 4) Upload the module to the web ui by setting the module name to for example irc, filename ircModule.py and then add a config example for this module.
 
