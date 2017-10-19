@@ -233,23 +233,7 @@ where the regular expression is as follow:
 
 2) Drag the file to the modules directory. The moduleManager will then automatically import it and check for errors.
 
-3) In modules.conf edit the configuration, in this case:
-
-# specify unique configs for module
-# a * means that all configs contaning the strings equal to the one 
-# after the * will be treated as unique. 
-# in this example all pass_grammar, mode_grammar etc should be 
-# treated as unique keys
-[uniqueKeys]
-irc = botnet, *grammar, ... etc
-# name a section, can be anything as long as its unique
-# and add module regname (in this case irc) as module option
-[myIrcConf]
-module = irc
-nick = SpyBot
-channel = #irc
-...
-etc.
+3) In modules.conf edit the configuration
 
 4) Upload the module to the web ui by setting the module name to for example irc, filename ircModule.py and then add a config example for this module.
 
