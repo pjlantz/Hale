@@ -45,6 +45,7 @@ Setup
 
 7) The runserver command deploys a development server that is not recommended for production use due to performance issues. Instead deploy the web ui by installing the **`mod_wsgi`** for Apache, assuming you're running Ubuntu, run **`apt-get install libapache2-mod-wsgi`**. In **`/etc/apache2/sites-available/default`** add the following:
 
+```
     Alias /media /usr/local/lib/python2.6/dist-packages/django/contrib/admin/media/
     <Location /media>
       Order allow,deny
@@ -56,7 +57,7 @@ Setup
     WSGIProcessGroup group
 
     WSGIScriptAlias / /home/..../webdb/django.wsgi
-
+```
 and edit the username and group for which the WSGI daemon should run as. **`WSGIScriptAlias`** should be set to the fullpath to the django.wsgi file located in the **`webdb`** directory. The Alias specified above is needed for the administration page to be rendered correctly. To be able to upload modules through the web interface, issue a **`chmod o+w webdb/modules`**.
 
 
